@@ -113,12 +113,18 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 
 </div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places&callback=initAutocomplete" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
 
 emailjs.init("UTKviVTwg9BJjYixe");
+
+function initAutocomplete(){
+new google.maps.places.Autocomplete(document.getElementById('collection'));
+new google.maps.places.Autocomplete(document.getElementById('via'));
+new google.maps.places.Autocomplete(document.getElementById('delivery'));
+}
 
 document.getElementById("moveDate").min=new Date().toISOString().slice(0,16);
 
@@ -143,21 +149,31 @@ let rate=[45,50,100,120][men];
 let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
 let costStairs=stairsTotal*10*men;
 
-let collectionVal=collection.value;
-let viaVal=via.value;
-let deliveryVal=delivery.value;
+const collectionVal=collection.value;
+const viaVal=via.value;
+const deliveryVal=delivery.value;
 
-let service=new google.maps.DistanceMatrixService();
+const segments=viaVal?
+[{origin:collectionVal,destination:viaVal},{origin:viaVal,destination:deliveryVal}]
+:[{origin:collectionVal,destination:deliveryVal}];
 
-service.getDistanceMatrix({
-origins:[collectionVal],
-destinations:[deliveryVal],
+let totalMeters=0,totalSeconds=0,done=0;
+
+segments.forEach(seg=>{
+new google.maps.DistanceMatrixService().getDistanceMatrix({
+origins:[seg.origin],
+destinations:[seg.destination],
 travelMode:"DRIVING"
 },function(res){
-
 let el=res.rows[0].elements[0];
-let meters=el.distance.value;
-let seconds=el.duration.value;
+totalMeters+=el.distance.value;
+totalSeconds+=el.duration.value;
+done++;
+if(done===segments.length) finish(totalMeters,totalSeconds);
+});
+});
+
+function finish(meters,seconds){
 
 let miles=meters/1609.34;
 let costMiles=miles*1.5;
@@ -174,27 +190,36 @@ let congestion=/(EC\d|WC\d|W1|SW1|SE1)/.test((collectionVal+viaVal+deliveryVal).
 
 let total=costHours+costMiles+costStairs+congestion;
 
-let menText = men===0?"No help":(men===1?"1 man":men+" men");
-let stairsText = men===0?"No charge":`${menText} × ${stairsTotal} flights × £10`;
+let menText = men===0?"No help":""+(men===1?"1 man":men+" men");
+let stairsText = men===0?"No charge (no help requested)":`${menText} × ${stairsTotal} flights × £10`;
 
-let ref="FAM-"+Date.now();
+let quote=`Estimated working time: ${hours}h
 
-let quote=`Reference: ${ref}
+Distance: ${miles.toFixed(2)} miles
+
+--------------------------------
 
 TOTAL: £${total.toFixed(2)}
 
+--------------------------------
+
+Breakdown:
+
 Labour: £${costHours.toFixed(2)}
 Distance: £${costMiles.toFixed(2)}
-Stairs: £${costStairs.toFixed(2)}
+Stairs: ${stairsText} = £${costStairs.toFixed(2)}
 Congestion: £${congestion.toFixed(2)}`;
 
 result.innerText=quote;
 bookingButtons.style.display="block";
 
-fullMessage=quote;
+fullMessage=`${quote}
+
+Client email: ${email.value}`;
+
 quoteCalculated=true;
 
-});
+}
 
 }
 
@@ -206,7 +231,7 @@ quote_breakdown: fullMessage,
 to_email: email.value
 })
 .then(()=>alert("Email sent successfully"))
-.catch(e=>alert("Error "+JSON.stringify(e)));
+.catch(()=>alert("Email failed"));
 }
 
 document.getElementById("whatsappBtn").onclick=function(){
