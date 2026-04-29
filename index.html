@@ -216,6 +216,7 @@ congestion=18;
 let total=costHours+costMiles+costStairs+congestion;
 
 let menText = men === 0 ? "Driver only" : men === 1 ? "1 man" : men + " men";
+let stairsText = men === 0 ? "No charge (no help requested)" : `${menText} × ${stairsTotal} flights × £10`;
 
 let now = new Date();
 let quoteRef = "FAM-" + now.getFullYear() +
@@ -244,7 +245,7 @@ Distance
 ${miles.toFixed(2)} miles × £1.50 = £${costMiles.toFixed(2)}
 
 Stairs
-${menText} × ${stairsTotal} flights × £10 = £${costStairs.toFixed(2)}
+${stairsText} = £${costStairs.toFixed(2)}
 
 Congestion charge
 £${congestion.toFixed(2)}
