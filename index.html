@@ -8,55 +8,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
-body{
-font-family:'Poppins',sans-serif;
-background:#f4f7fb;
-margin:0;
-}
-
-.container{
-max-width:800px;
-margin:40px auto;
-background:white;
-padding:30px;
-border-radius:12px;
-box-shadow:0 8px 25px rgba(0,0,0,0.12);
-}
-
+body{font-family:'Poppins',sans-serif;background:#f4f7fb;margin:0;}
+.container{max-width:800px;margin:40px auto;background:white;padding:30px;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.12);}
 h1{text-align:center;color:#0B4DBA;}
 h2{text-align:center;font-weight:400;color:#555;margin-bottom:25px;}
-
 label{font-weight:600;display:block;margin-top:15px;}
-
-input,select,textarea{
-width:100%;
-padding:12px;
-margin-top:5px;
-border-radius:6px;
-border:1px solid #ccc;
-}
-
-button{
-width:100%;
-padding:15px;
-margin-top:8px;
-border:none;
-border-radius:6px;
-font-weight:600;
-cursor:pointer;
-}
-
+input,select,textarea{width:100%;padding:12px;margin-top:5px;border-radius:6px;border:1px solid #ccc;}
+button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font-weight:600;cursor:pointer;}
 #quoteBtn{background:#0B4DBA;color:white;}
 #whatsappBtn{background:#25D366;color:white;}
 #emailBtn{background:#007bff;color:white;}
-
-.result{
-margin-top:25px;
-padding:20px;
-background:#eef5ff;
-border-radius:8px;
-white-space:pre-line;
-}
+.result{margin-top:25px;padding:20px;background:#eef5ff;border-radius:8px;white-space:pre-line;}
 </style>
 </head>
 
@@ -151,7 +113,15 @@ white-space:pre-line;
 
 </div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
+<script>
+function initAutocomplete(){
+new google.maps.places.Autocomplete(document.getElementById('collection'));
+new google.maps.places.Autocomplete(document.getElementById('via'));
+new google.maps.places.Autocomplete(document.getElementById('delivery'));
+}
+</script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places&callback=initAutocomplete" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
@@ -162,12 +132,6 @@ document.getElementById("moveDate").min=new Date().toISOString().slice(0,16);
 
 let quoteCalculated=false;
 let fullMessage="";
-
-window.onload=function(){
-new google.maps.places.Autocomplete(collection);
-new google.maps.places.Autocomplete(via);
-new google.maps.places.Autocomplete(delivery);
-}
 
 function formatDate(dateValue){
 let d=new Date(dateValue);
@@ -180,13 +144,20 @@ return `${day}/${month}/${year} - ${hours}:${minutes}`;
 }
 
 document.getElementById("quoteForm").addEventListener("submit",function(e){
+
+if(!this.checkValidity()){
+this.reportValidity();
+return;
+}
+
 e.preventDefault();
 calculateQuote();
+
 });
 
 function calculateQuote(){
 
-let men=parseInt(help.value);
+let men=parseInt(document.getElementById("help").value);
 let rate=[45,50,100,120][men];
 
 let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
@@ -229,15 +200,27 @@ if(hours<2)hours=2;
 
 let costHours=hours*rate;
 
-/* 🔥 FIX CONGESTION (SINGURA MODIFICARE REALĂ) */
+/* ✅ FIX CONGESTION (singura modificare) */
 let congestion=0;
-if(/(EC\d|WC\d|W1|SW1|SE1)/.test((collection+via+delivery).toUpperCase())){
+const zones=["EC","WC","W1","SW1","SE1"];
+
+function isCongestion(address){
+if(!address) return false;
+let upper=address.toUpperCase();
+return zones.some(zone=>{
+let regex=new RegExp("\\b"+zone+"[0-9A-Z]*\\b");
+return regex.test(upper);
+});
+}
+
+if(isCongestion(collection)||isCongestion(via)||isCongestion(delivery)){
 congestion=18;
 }
+/* END */
 
 let total=costHours+costMiles+costStairs+congestion;
 
-let formattedDate=formatDate(moveDate.value);
+let formattedDate=formatDate(document.getElementById("moveDate").value);
 
 let quote=`Estimated working time: ${hours}h
 
@@ -254,19 +237,26 @@ TOTAL: £${total.toFixed(2)}
 
 Minimum booking: 2 hours`;
 
-result.innerText=quote;
-bookingButtons.style.display="block";
+document.getElementById("result").innerText=quote;
+document.getElementById("bookingButtons").style.display="block";
+
+let nameValue=document.getElementById("name").value;
+let phoneValue=document.getElementById("phone").value;
+let emailValue=document.getElementById("email").value;
+let vanValue=document.getElementById("van").value;
+let helpValue=document.getElementById("help").value;
+let infoValue=document.getElementById("info").value;
 
 fullMessage=`Fast Any Moves Booking
 
-Name: ${document.getElementById("name").value}
-Phone: ${phone.value}
-Email: ${email.value}
+Name: ${nameValue}
+Phone: ${phoneValue}
+Email: ${emailValue}
 
 Move Date: ${formattedDate}
 
-Van: ${van.value}
-Help: ${help.value}
+Van: ${vanValue}
+Help: ${helpValue}
 
 Collection: ${collection}
 Collection Stairs: ${stairsCollection.value}
@@ -278,7 +268,7 @@ Delivery: ${delivery}
 Delivery Stairs: ${stairsDelivery.value}
 
 Additional Info:
-${info.value}
+${infoValue}
 
 ${quote}`;
 
@@ -288,15 +278,15 @@ quoteCalculated=true;
 
 }
 
-whatsappBtn.onclick=function(){
-if(!quoteCalculated){alert("Calculate quote first");return;}
-window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
-}
-
-emailBtn.onclick=function(){
+document.getElementById("emailBtn").onclick=function(){
 if(!quoteCalculated){alert("Calculate quote first");return;}
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{quote_breakdown:fullMessage})
-.then(()=>alert("Email sent"));
+.then(()=>alert("Email sent successfully"));
+}
+
+document.getElementById("whatsappBtn").onclick=function(){
+if(!quoteCalculated){alert("Calculate quote first");return;}
+window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
 }
 
 </script>
