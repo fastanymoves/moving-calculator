@@ -291,8 +291,20 @@ quoteCalculated=true;
 }
 
 document.getElementById("emailBtn").onclick=function(){
-if(!quoteCalculated){alert("Calculate quote first");return;}
-emailjs.send("service_1e9jyk9","template_0tbv6y9",{quote_breakdown:fullMessage});
+if(!quoteCalculated){
+alert("Calculate quote first");
+return;
+}
+
+emailjs.send("service_1e9jyk9","template_0tbv6y9",{
+quote_breakdown: fullMessage
+})
+.then(function(){
+alert("Email sent successfully");
+})
+.catch(function(error){
+alert("Email failed: " + JSON.stringify(error));
+});
 }
 
 document.getElementById("whatsappBtn").onclick=function(){
