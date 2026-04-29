@@ -8,17 +8,55 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
-body{font-family:'Poppins',sans-serif;background:#f4f7fb;margin:0;}
-.container{max-width:800px;margin:40px auto;background:white;padding:30px;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.12);}
+body{
+font-family:'Poppins',sans-serif;
+background:#f4f7fb;
+margin:0;
+}
+
+.container{
+max-width:800px;
+margin:40px auto;
+background:white;
+padding:30px;
+border-radius:12px;
+box-shadow:0 8px 25px rgba(0,0,0,0.12);
+}
+
 h1{text-align:center;color:#0B4DBA;}
 h2{text-align:center;font-weight:400;color:#555;margin-bottom:25px;}
+
 label{font-weight:600;display:block;margin-top:15px;}
-input,select,textarea{width:100%;padding:12px;margin-top:5px;border-radius:6px;border:1px solid #ccc;}
-button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font-weight:600;cursor:pointer;}
+
+input,select,textarea{
+width:100%;
+padding:12px;
+margin-top:5px;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
+button{
+width:100%;
+padding:15px;
+margin-top:8px;
+border:none;
+border-radius:6px;
+font-weight:600;
+cursor:pointer;
+}
+
 #quoteBtn{background:#0B4DBA;color:white;}
 #whatsappBtn{background:#25D366;color:white;}
 #emailBtn{background:#007bff;color:white;}
-.result{margin-top:25px;padding:20px;background:#eef5ff;border-radius:8px;white-space:pre-line;}
+
+.result{
+margin-top:25px;
+padding:20px;
+background:#eef5ff;
+border-radius:8px;
+white-space:pre-line;
+}
 </style>
 </head>
 
@@ -106,22 +144,14 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 
 <div id="result" class="result"></div>
 
-<div id="bookingButtons" style="display:none;">
+<div id="bookingButtons" style="display:none;margin-top:10px;">
 <button id="whatsappBtn">Book via WhatsApp</button>
 <button id="emailBtn">Book via Email</button>
 </div>
 
 </div>
 
-<script>
-function initAutocomplete(){
-new google.maps.places.Autocomplete(document.getElementById('collection'));
-new google.maps.places.Autocomplete(document.getElementById('via'));
-new google.maps.places.Autocomplete(document.getElementById('delivery'));
-}
-</script>
-
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places&callback=initAutocomplete" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
@@ -132,6 +162,12 @@ document.getElementById("moveDate").min=new Date().toISOString().slice(0,16);
 
 let quoteCalculated=false;
 let fullMessage="";
+
+window.onload=function(){
+new google.maps.places.Autocomplete(collection);
+new google.maps.places.Autocomplete(via);
+new google.maps.places.Autocomplete(delivery);
+}
 
 function formatDate(dateValue){
 let d=new Date(dateValue);
@@ -144,20 +180,13 @@ return `${day}/${month}/${year} - ${hours}:${minutes}`;
 }
 
 document.getElementById("quoteForm").addEventListener("submit",function(e){
-
-if(!this.checkValidity()){
-this.reportValidity();
-return;
-}
-
 e.preventDefault();
 calculateQuote();
-
 });
 
 function calculateQuote(){
 
-let men=parseInt(document.getElementById("help").value);
+let men=parseInt(help.value);
 let rate=[45,50,100,120][men];
 
 let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
@@ -200,7 +229,7 @@ if(hours<2)hours=2;
 
 let costHours=hours*rate;
 
-/* 🔥 FIX CORECT CONGESTION */
+/* 🔥 FIX CONGESTION (SINGURA MODIFICARE REALĂ) */
 let congestion=0;
 if(/(EC\d|WC\d|W1|SW1|SE1)/.test((collection+via+delivery).toUpperCase())){
 congestion=18;
@@ -208,7 +237,7 @@ congestion=18;
 
 let total=costHours+costMiles+costStairs+congestion;
 
-let formattedDate=formatDate(document.getElementById("moveDate").value);
+let formattedDate=formatDate(moveDate.value);
 
 let quote=`Estimated working time: ${hours}h
 
@@ -225,19 +254,19 @@ TOTAL: £${total.toFixed(2)}
 
 Minimum booking: 2 hours`;
 
-document.getElementById("result").innerText=quote;
-document.getElementById("bookingButtons").style.display="block";
+result.innerText=quote;
+bookingButtons.style.display="block";
 
 fullMessage=`Fast Any Moves Booking
 
 Name: ${document.getElementById("name").value}
-Phone: ${document.getElementById("phone").value}
-Email: ${document.getElementById("email").value}
+Phone: ${phone.value}
+Email: ${email.value}
 
 Move Date: ${formattedDate}
 
-Van: ${document.getElementById("van").value}
-Help: ${document.getElementById("help").value}
+Van: ${van.value}
+Help: ${help.value}
 
 Collection: ${collection}
 Collection Stairs: ${stairsCollection.value}
@@ -249,7 +278,7 @@ Delivery: ${delivery}
 Delivery Stairs: ${stairsDelivery.value}
 
 Additional Info:
-${document.getElementById("info").value}
+${info.value}
 
 ${quote}`;
 
@@ -259,14 +288,15 @@ quoteCalculated=true;
 
 }
 
-document.getElementById("emailBtn").onclick=function(){
-if(!quoteCalculated){alert("Calculate quote first");return;}
-emailjs.send("service_1e9jyk9","template_0tbv6y9",{quote_breakdown:fullMessage});
-}
-
-document.getElementById("whatsappBtn").onclick=function(){
+whatsappBtn.onclick=function(){
 if(!quoteCalculated){alert("Calculate quote first");return;}
 window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
+}
+
+emailBtn.onclick=function(){
+if(!quoteCalculated){alert("Calculate quote first");return;}
+emailjs.send("service_1e9jyk9","template_0tbv6y9",{quote_breakdown:fullMessage})
+.then(()=>alert("Email sent"));
 }
 
 </script>
