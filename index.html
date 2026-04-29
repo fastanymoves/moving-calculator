@@ -14,8 +14,6 @@ h1{text-align:center;color:#0B4DBA;}
 h2{text-align:center;font-weight:400;color:#555;margin-bottom:25px;}
 label{font-weight:600;display:block;margin-top:15px;}
 input,select,textarea{width:100%;padding:12px;margin-top:5px;border-radius:6px;border:1px solid #ccc;}
-input:invalid,select:invalid,textarea:invalid{border:2px solid #e74c3c;background:#fff6f6;}
-input:valid,select:valid,textarea:valid{border:2px solid #2ecc71;}
 button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font-weight:600;cursor:pointer;}
 #quoteBtn{background:#0B4DBA;color:white;}
 #whatsappBtn{background:#25D366;color:white;}
@@ -74,7 +72,7 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 <option value="4">4 Flights</option>
 </select>
 
-<label>Via Address (optional)</label>
+<label>Via Address</label>
 <input type="text" id="via">
 
 <label>Via Stairs</label>
@@ -107,7 +105,7 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 
 <div id="result" class="result"></div>
 
-<div id="bookingButtons" style="display:none;margin-top:10px;">
+<div id="bookingButtons" style="display:none;">
 <button id="whatsappBtn">Book via WhatsApp</button>
 <button id="emailBtn">Book via Email</button>
 </div>
@@ -121,14 +119,16 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 
 emailjs.init("UTKviVTwg9BJjYixe");
 
-document.getElementById("moveDate").min=new Date().toISOString().slice(0,16);
-
 let quoteCalculated=false;
 let fullMessage="";
 
 function formatDate(dateValue){
 let d=new Date(dateValue);
-return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} - ${d.getHours()}:${d.getMinutes()}`;
+let day=String(d.getDate()).padStart(2,'0');
+let month=String(d.getMonth()+1).padStart(2,'0');
+let hours=String(d.getHours()).padStart(2,'0');
+let minutes=String(d.getMinutes()).padStart(2,'0');
+return `${day}/${month}/${d.getFullYear()} - ${hours}:${minutes}`;
 }
 
 window.onload=function(){
@@ -144,12 +144,14 @@ calculateQuote();
 
 function calculateQuote(){
 
+let name=document.getElementById("name").value;
+let phone=document.getElementById("phone").value;
+let email=document.getElementById("email").value;
+
 let van=document.getElementById("van").value;
 let men=parseInt(document.getElementById("help").value);
 
-// 🔥 TOATE VANURILE AU ACELEAȘI PREȚURI
 let rate=0;
-
 if(men===0) rate=45;
 if(men===1) rate=50;
 if(men===2) rate=100;
@@ -162,33 +164,18 @@ const collection=document.getElementById("collection").value;
 const via=document.getElementById("via").value;
 const delivery=document.getElementById("delivery").value;
 
-const segments=via?
-[{origin:collection,destination:via},{origin:via,destination:delivery}]
-:[{origin:collection,destination:delivery}];
-
-let totalMeters=0,totalSeconds=0,done=0;
-
-segments.forEach(seg=>{
 new google.maps.DistanceMatrixService().getDistanceMatrix({
-origins:[seg.origin],
-destinations:[seg.destination],
+origins:[collection],
+destinations:[delivery],
 travelMode:"DRIVING"
 },function(res){
+
 let el=res.rows[0].elements[0];
-totalMeters+=el.distance.value;
-totalSeconds+=el.duration.value;
-done++;
-if(done===segments.length) finish(totalMeters,totalSeconds);
-});
-});
 
-function finish(meters,seconds){
-
-let miles=meters/1609.34;
-let costMiles=miles*1.5;
+let miles=el.distance.value/1609.34;
+let seconds=el.duration.value;
 
 let load=30*60;
-
 if(men===0) load=40*60;
 if(men===1) load=30*60;
 if(men===2) load=20*60;
@@ -201,79 +188,46 @@ if(hours<2)hours=2;
 
 let costHours=hours*rate;
 
-let congestion=0;
-
-["EC","WC","W1","SW1","SE1"].forEach(z=>{
-if(collection.toUpperCase().includes(z)||via.toUpperCase().includes(z)||delivery.toUpperCase().includes(z)){
-congestion=18;
-}
-});
-
-let total=costHours+costMiles+costStairs+congestion;
+let total=costHours+(miles*1.5)+costStairs;
 
 let formattedDate=formatDate(document.getElementById("moveDate").value);
 
-let quote=`Estimated working time: ${hours}h
-
-Distance: ${miles.toFixed(2)} miles
-
-Cost hours: £${costHours.toFixed(2)}
-Cost miles: £${costMiles.toFixed(2)}
-Cost stairs: £${costStairs.toFixed(2)}
-Congestion charge: £${congestion}
-
-TOTAL: £${total.toFixed(2)}
-
---------------------------------
-
-Minimum booking: 2 hours
-`;
+let quote=`TOTAL: £${total.toFixed(2)}`;
 
 document.getElementById("result").innerText=quote;
 document.getElementById("bookingButtons").style.display="block";
 
-// 🔥 TRIMITE TOT FORMULARUL COMPLET
 fullMessage=`Fast Any Moves Booking
 
-Name: ${name.value}
-Phone: ${phone.value}
-Email: ${email.value}
-
+Name: ${name}
+Phone: ${phone}
+Email: ${email}
 Move Date: ${formattedDate}
-
 Van: ${van}
 Help: ${men}
-
 Collection: ${collection}
-Collection Stairs: ${stairsCollection.value}
-
-Via: ${via}
-Via Stairs: ${stairsVia.value}
-
 Delivery: ${delivery}
-Delivery Stairs: ${stairsDelivery.value}
-
-Additional Info:
-${info.value}
 
 ${quote}`;
 
 quoteCalculated=true;
 
+// 🔥 EMAIL FIX
+document.getElementById("emailBtn").onclick=function(){
+emailjs.send("service_1e9jyk9","template_0tbv6y9",{
+name:name,
+phone:phone,
+email:email,
+move_date:formattedDate,
+service:`${van} / ${men}`,
+collection:collection,
+delivery:delivery,
+quote_breakdown:fullMessage
+}).then(()=>alert("Email sent"));
 }
 
-}
+});
 
-whatsappBtn.onclick=function(){
-if(!quoteCalculated)return alert("Calculate quote first");
-window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
-}
-
-emailBtn.onclick=function(){
-if(!quoteCalculated)return alert("Calculate quote first");
-
-emailjs.send("service_1e9jyk9","template_0tbv6y9",{quote_breakdown:fullMessage})
-.then(()=>alert("Email sent successfully"));
 }
 
 </script>
