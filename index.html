@@ -64,11 +64,38 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 <label>Collection Address *</label>
 <input type="text" id="collection" required>
 
+<label>Collection Stairs *</label>
+<select id="stairsCollection" required>
+<option value="0">Ground floor / Lift</option>
+<option value="1">1 Flight</option>
+<option value="2">2 Flights</option>
+<option value="3">3 Flights</option>
+<option value="4">4 Flights</option>
+</select>
+
 <label>Via Address (optional)</label>
 <input type="text" id="via">
 
+<label>Via Stairs</label>
+<select id="stairsVia">
+<option value="0">Ground floor / Lift</option>
+<option value="1">1 Flight</option>
+<option value="2">2 Flights</option>
+<option value="3">3 Flights</option>
+<option value="4">4 Flights</option>
+</select>
+
 <label>Delivery Address *</label>
 <input type="text" id="delivery" required>
+
+<label>Delivery Stairs *</label>
+<select id="stairsDelivery" required>
+<option value="0">Ground floor / Lift</option>
+<option value="1">1 Flight</option>
+<option value="2">2 Flights</option>
+<option value="3">3 Flights</option>
+<option value="4">4 Flights</option>
+</select>
 
 <label>Additional Information</label>
 <textarea id="info"></textarea>
@@ -108,6 +135,11 @@ new google.maps.places.Autocomplete(document.getElementById('via'));
 
 }
 
+function formatDate(dateValue){
+let d=new Date(dateValue);
+return d.toLocaleString();
+}
+
 document.getElementById("quoteForm").addEventListener("submit",function(e){
 
 if(!this.checkValidity()){
@@ -123,31 +155,76 @@ return;
 
 e.preventDefault();
 
-let men=parseInt(document.getElementById("help").value);
+let men=parseInt(help.value);
 let rate=[45,50,100,120][men];
 
-const collection=document.getElementById("collection").value;
+let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
+let costStairs=stairsTotal*10*men;
+
+const collection=collectionInput= document.getElementById("collection").value;
 const via=document.getElementById("via").value;
 const delivery=document.getElementById("delivery").value;
 
-/* ✅ FIX CONGESTION */
+const segments=via?
+[{origin:collection,destination:via},{origin:via,destination:delivery}]
+:[{origin:collection,destination:delivery}];
+
+let totalMeters=0,totalSeconds=0,done=0;
+
+segments.forEach(seg=>{
+new google.maps.DistanceMatrixService().getDistanceMatrix({
+origins:[seg.origin],
+destinations:[seg.destination],
+travelMode:"DRIVING"
+},function(res){
+let el=res.rows[0].elements[0];
+totalMeters+=el.distance.value;
+totalSeconds+=el.duration.value;
+done++;
+if(done===segments.length) finish(totalMeters,totalSeconds);
+});
+});
+
+function finish(meters,seconds){
+
+let miles=meters/1609.34;
+let costMiles=miles*1.5;
+
+let load=[40,30,20,15][men]*60;
+let totalTime=seconds+load+(stairsTotal*600);
+
+let hours=Math.ceil((totalTime/3600)*2)/2;
+if(hours<2)hours=2;
+
+let costHours=hours*rate;
+
+/* congestion fix */
 let congestion=0;
-function hasCongestionPostcode(address){
-if(!address) return false;
-let upper=address.toUpperCase();
-return /(EC\d|WC\d|W1|SW1|SE1)/.test(upper);
-}
-if(hasCongestionPostcode(collection)||hasCongestionPostcode(via)||hasCongestionPostcode(delivery)){
+if(/(EC\d|WC\d|W1|SW1|SE1)/.test((collection+via+delivery).toUpperCase())){
 congestion=18;
 }
-/* END */
 
-let quote=`Congestion charge: £${congestion}`;
+let total=costHours+costMiles+costStairs+congestion;
+
+let quote=`Estimated working time: ${hours}h
+
+Distance: ${miles.toFixed(2)} miles
+
+Cost hours: £${costHours.toFixed(2)}
+Cost miles: £${costMiles.toFixed(2)}
+Cost stairs: £${costStairs.toFixed(2)}
+Congestion charge: £${congestion}
+
+TOTAL: £${total.toFixed(2)}
+
+--------------------------------
+
+Minimum booking: 2 hours`;
 
 document.getElementById("result").innerText=quote;
 document.getElementById("bookingButtons").style.display="block";
 
-let formattedDate=new Date(document.getElementById("moveDate").value).toLocaleString();
+let formattedDate=formatDate(document.getElementById("moveDate").value);
 
 let fullMessage=`Fast Any Moves Booking
 
@@ -161,18 +238,27 @@ Van: ${document.getElementById("van").value}
 Help: ${document.getElementById("help").value}
 
 Collection: ${collection}
+Collection Stairs: ${stairsCollection.value}
+
 Via: ${via}
+Via Stairs: ${stairsVia.value}
+
 Delivery: ${delivery}
+Delivery Stairs: ${stairsDelivery.value}
+
+Additional Info:
+${document.getElementById("info").value}
 
 ${quote}`;
 
 document.getElementById("emailBtn").onclick=function(){
-emailjs.send("service_1e9jyk9","template_0tbv6y9",{quote_breakdown:fullMessage})
-.then(()=>alert("Email sent"));
+emailjs.send("service_1e9jyk9","template_0tbv6y9",{quote_breakdown:fullMessage});
 }
 
 document.getElementById("whatsappBtn").onclick=function(){
 window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
+}
+
 }
 
 });
