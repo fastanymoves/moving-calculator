@@ -200,7 +200,7 @@ if(hours<2)hours=2;
 
 let costHours=hours*rate;
 
-/* ✅ FIX CONGESTION (singura modificare) */
+/* FIX CONGESTION */
 let congestion=0;
 const zones=["EC","WC","W1","SW1","SE1"];
 
@@ -216,7 +216,6 @@ return regex.test(upper);
 if(isCongestion(collection)||isCongestion(via)||isCongestion(delivery)){
 congestion=18;
 }
-/* END */
 
 let total=costHours+costMiles+costStairs+congestion;
 
@@ -235,28 +234,27 @@ TOTAL: £${total.toFixed(2)}
 
 --------------------------------
 
-Minimum booking: 2 hours`;
+Minimum booking: 2 hours
+
+This is an estimated price and time based on the details provided by the customer.
+
+If additional time is required, it will be charged in half-hour increments at the selected service rate.`;
 
 document.getElementById("result").innerText=quote;
 document.getElementById("bookingButtons").style.display="block";
 
-let nameValue=document.getElementById("name").value;
-let phoneValue=document.getElementById("phone").value;
-let emailValue=document.getElementById("email").value;
-let vanValue=document.getElementById("van").value;
-let helpValue=document.getElementById("help").value;
-let infoValue=document.getElementById("info").value;
+fullMessage=`New Moving Quote Request – Fast Any Moves
 
-fullMessage=`Fast Any Moves Booking
+Fast Any Moves Booking
 
-Name: ${nameValue}
-Phone: ${phoneValue}
-Email: ${emailValue}
+Name: ${document.getElementById("name").value}
+Phone: ${document.getElementById("phone").value}
+Email: ${document.getElementById("email").value}
 
 Move Date: ${formattedDate}
 
-Van: ${vanValue}
-Help: ${helpValue}
+Van: ${document.getElementById("van").value}
+Help: ${document.getElementById("help").value}
 
 Collection: ${collection}
 Collection Stairs: ${stairsCollection.value}
@@ -268,7 +266,7 @@ Delivery: ${delivery}
 Delivery Stairs: ${stairsDelivery.value}
 
 Additional Info:
-${infoValue}
+${document.getElementById("info").value}
 
 ${quote}`;
 
@@ -280,8 +278,7 @@ quoteCalculated=true;
 
 document.getElementById("emailBtn").onclick=function(){
 if(!quoteCalculated){alert("Calculate quote first");return;}
-emailjs.send("service_1e9jyk9","template_0tbv6y9",{quote_breakdown:fullMessage})
-.then(()=>alert("Email sent successfully"));
+emailjs.send("service_1e9jyk9","template_0tbv6y9",{quote_breakdown:fullMessage});
 }
 
 document.getElementById("whatsappBtn").onclick=function(){
