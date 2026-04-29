@@ -217,57 +217,71 @@ let total=costHours+costMiles+costStairs+congestion;
 
 let menText = men === 0 ? "Driver only" : men === 1 ? "1 man" : men + " men";
 
-let quoteRef="FAM-"+Math.floor(10000+Math.random()*90000);
-let today=new Date().toLocaleDateString("en-GB");
+let now = new Date();
+let quoteRef = "FAM-" + now.getFullYear() +
+String(now.getMonth()+1).padStart(2,'0') +
+String(now.getDate()).padStart(2,'0') + "-" +
+Math.floor(1000 + Math.random()*9000);
 
-let quote=`FAST ANY MOVES LTD  
-Instant Moving Quote  
+let quote=`Reference: ${quoteRef}
 
---------------------------------
+Estimated working time: ${hours}h
 
-Quote Reference: ${quoteRef}  
-Date: ${today}  
-
---------------------------------
-
-Estimated working time: ${hours} hours  
-Total distance: ${miles.toFixed(2)} miles  
+Distance: ${miles.toFixed(2)} miles
 
 --------------------------------
 
-TOTAL PRICE: £${total.toFixed(2)}  
+TOTAL: £${total.toFixed(2)}
 
 --------------------------------
 
-COST BREAKDOWN
+Breakdown:
 
-Labour  
-${hours} hours × £${rate}/hour  
-= £${costHours.toFixed(2)}  
+Labour
+${hours}h × £${rate}/hour = £${costHours.toFixed(2)}
 
-Distance  
-${miles.toFixed(2)} miles × £1.50/mile  
-= £${costMiles.toFixed(2)}  
+Distance
+${miles.toFixed(2)} miles × £1.50 = £${costMiles.toFixed(2)}
 
-Stairs  
-${menText} × ${stairsTotal} flights × £10  
-= £${costStairs.toFixed(2)}  
+Stairs
+${menText} × ${stairsTotal} flights × £10 = £${costStairs.toFixed(2)}
 
-Congestion charge  
-= £${congestion.toFixed(2)}  
+Congestion charge
+£${congestion.toFixed(2)}
 
 --------------------------------
 
-This quotation is based on the details provided by the customer.
-
-Any additional time required will be charged in 30-minute increments at the selected service rate.`;
+Minimum booking: 2 hours`;
 
 document.getElementById("result").innerText=quote;
 document.getElementById("bookingButtons").style.display="block";
 
 let formattedDate=formatDate(document.getElementById("moveDate").value);
 
-fullMessage=`${quote}`;
+fullMessage=`Fast Any Moves Booking
+
+Name: ${document.getElementById("name").value}
+Phone: ${document.getElementById("phone").value}
+Email: ${document.getElementById("email").value}
+
+Move Date: ${formattedDate}
+
+Van: ${document.getElementById("van").value}
+Help: ${document.getElementById("help").value}
+
+Collection: ${collection}
+Collection Stairs: ${stairsCollection.value}
+
+Via: ${via}
+Via Stairs: ${stairsVia.value}
+
+Delivery: ${delivery}
+Delivery Stairs: ${stairsDelivery.value}
+
+Additional Info:
+${document.getElementById("info").value}
+
+${quote}`;
 
 quoteCalculated=true;
 
