@@ -14,6 +14,8 @@ h1{text-align:center;color:#0B4DBA;}
 h2{text-align:center;font-weight:400;color:#555;margin-bottom:25px;}
 label{font-weight:600;display:block;margin-top:15px;}
 input,select,textarea{width:100%;padding:12px;margin-top:5px;border-radius:6px;border:1px solid #ccc;}
+input:invalid,select:invalid,textarea:invalid{border:2px solid #e74c3c;background:#fff6f6;}
+input:valid,select:valid,textarea:valid{border:2px solid #2ecc71;}
 button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font-weight:600;cursor:pointer;}
 #quoteBtn{background:#0B4DBA;color:white;}
 #whatsappBtn{background:#25D366;color:white;}
@@ -43,21 +45,22 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 <label>Moving Date & Time *</label>
 <input type="datetime-local" id="moveDate" required>
 
-<label>What size of van do you need for?</label>
+<label>What size of van do you need for? *</label>
 <select id="van" required>
 <option value="">Select</option>
-<option value="medium">Small & Medium Van</option>
+<option value="small">Small Van</option>
+<option value="medium">Medium Van</option>
 <option value="large">Large Van</option>
-<option value="luton">Giant Luton Van</option>
+<option value="luton">Luton Van</option>
 </select>
 
-<label>Do you need help with loading and unloading?</label>
+<label>Do you need help with loading and unloading? *</label>
 <select id="help" required>
 <option value="">Select</option>
 <option value="0">No help required</option>
 <option value="1">Driver help</option>
-<option value="2">Driver help + 1 helper</option>
-<option value="3">Driver help + 2 helpers</option>
+<option value="2">Driver + 1 helper</option>
+<option value="3">Driver + 2 helpers</option>
 </select>
 
 <label>Collection Address *</label>
@@ -119,6 +122,8 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 
 emailjs.init("YOUR_EMAILJS_KEY");
 
+document.getElementById("moveDate").min=new Date().toISOString().slice(0,16);
+
 let quoteCalculated=false;
 let fullMessage="";
 
@@ -138,17 +143,19 @@ new google.maps.places.Autocomplete(document.getElementById('delivery'));
 }
 
 document.getElementById("quoteForm").addEventListener("submit",function(e){
+
+if(!this.checkValidity()){
+this.reportValidity();
+return;
+}
+
 e.preventDefault();
 calculateQuote();
+
 });
 
 function calculateQuote(){
 
-let name=document.getElementById("name").value;
-let phone=document.getElementById("phone").value;
-let email=document.getElementById("email").value;
-
-let van=document.getElementById("van").value;
 let men=parseInt(document.getElementById("help").value);
 
 let rate=0;
@@ -234,13 +241,13 @@ document.getElementById("bookingButtons").style.display="block";
 
 fullMessage=`Fast Any Moves Booking
 
-Name: ${name}
-Phone: ${phone}
-Email: ${email}
+Name: ${document.getElementById("name").value}
+Phone: ${document.getElementById("phone").value}
+Email: ${document.getElementById("email").value}
 
 Move Date: ${formattedDate}
 
-Van: ${van}
+Van: ${document.getElementById("van").value}
 Help: ${men}
 
 Collection: ${collection}
@@ -253,7 +260,7 @@ Delivery: ${delivery}
 Delivery Stairs: ${stairsDelivery.value}
 
 Additional Info:
-${info.value}
+${document.getElementById("info").value}
 
 ${quote}`;
 
@@ -266,11 +273,14 @@ quoteCalculated=true;
 document.getElementById("emailBtn").onclick=function(){
 if(!quoteCalculated){alert("Calculate quote first");return;}
 
-emailjs.send("service_XXXX","template_0tbv6y9",{
+emailjs.send("service_1e9jyk9","template_0tbv6y9",{
 quote_breakdown:fullMessage
-}).then(function(){
-alert("Email sent successfully");
-});
+}).then(()=>alert("Email sent successfully"));
+}
+
+document.getElementById("whatsappBtn").onclick=function(){
+if(!quoteCalculated){alert("Calculate quote first");return;}
+window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
 }
 
 </script>
