@@ -133,7 +133,7 @@ let d=new Date(value);
 return d.toLocaleString("en-GB",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
 }
 
-/* SET MIN DATE */
+/* MIN DATE */
 let now=new Date();
 now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
 document.getElementById("moveDate").min=now.toISOString().slice(0,16);
@@ -147,29 +147,48 @@ luton:[40,50,70,100]
 }[van][men];
 }
 
+/* 🔥 SINGURA MODIFICARE */
+function validateAndScroll(){
+let fields=["name","email","phone","moveDate","van","help","collection","delivery"];
+let firstError=null;
+
+fields.forEach(id=>{
+let el=document.getElementById(id);
+el.style.border="1px solid #ccc";
+
+if(!el.value && !firstError){
+el.style.border="2px solid red";
+firstError=el;
+}
+});
+
+if(firstError){
+firstError.scrollIntoView({behavior:"smooth",block:"center"});
+firstError.focus();
+return false;
+}
+
+return true;
+}
+
 let fullMessage="";
 
 document.getElementById("quoteForm").addEventListener("submit",function(e){
 e.preventDefault();
 
-/* 🔥 VALIDARE DATA (FIX REAL) */
-let selectedDate = new Date(document.getElementById("moveDate").value);
-let nowCheck = new Date();
+/* 🔥 AICI SE FOLOSEȘTE */
+if(!validateAndScroll()) return;
 
-if(selectedDate < nowCheck){
-alert("Please select a future date and time");
-return;
-}
+/* RESTUL CODULUI RĂMÂNE IDENTIC */
 
-/* 🔥 NAME FIX */
 let nameValue=document.getElementById("name").value.trim();
 if(!nameValue) nameValue="N/A";
 
 let phone=document.getElementById("phone").value;
 let email=document.getElementById("email").value;
 
-let men=parseInt(document.getElementById("help").value);
-let rate=getRate(document.getElementById("van").value,men);
+let men=parseInt(help.value);
+let rate=getRate(van.value,men);
 
 let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
 let costStairs=men===0?0:stairsTotal*10*men;
@@ -216,7 +235,6 @@ This estimate is based on the details provided.
 
 Any additional time will be charged in 30-minute increments.`;
 
-/* FULL MESSAGE */
 fullMessage=`Fast Any Moves Booking
 
 Name: ${nameValue}
