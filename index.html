@@ -10,6 +10,8 @@
 <style>
 body{font-family:'Poppins',sans-serif;background:#f4f7fb;margin:0;}
 .container{max-width:800px;margin:40px auto;background:white;padding:30px;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.12);}
+h1{text-align:center;color:#0B4DBA;}
+h2{text-align:center;font-weight:400;color:#555;margin-bottom:25px;}
 label{font-weight:600;display:block;margin-top:15px;}
 input,select,textarea{width:100%;padding:12px;margin-top:5px;border-radius:6px;border:1px solid #ccc;}
 button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font-weight:600;cursor:pointer;}
@@ -17,8 +19,6 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 #whatsappBtn{background:#25D366;color:white;}
 #emailBtn{background:#007bff;color:white;}
 .result{margin-top:25px;padding:20px;background:#eef5ff;border-radius:8px;white-space:pre-line;}
-.error{color:red;font-size:13px;}
-input.error,select.error{border:2px solid red;}
 </style>
 </head>
 
@@ -26,62 +26,90 @@ input.error,select.error{border:2px solid red;}
 
 <div class="container">
 
-<h2>Fast Any Moves Ltd – Instant Quote</h2>
+<h1>Fast Any Moves Ltd</h1>
+<h2>Instant Moving Quote – London Man & Van</h2>
 
-<form id="form">
+<form id="quoteForm">
 
 <label>Name *</label>
-<input id="name">
-<div class="error" id="err_name"></div>
+<input type="text" id="name" required>
 
 <label>Email *</label>
-<input id="email">
-<div class="error" id="err_email"></div>
+<input type="email" id="email" required>
 
 <label>Phone *</label>
-<input id="phone">
-<div class="error" id="err_phone"></div>
+<input type="text" id="phone" required>
 
-<label>Date *</label>
-<input type="datetime-local" id="date">
-<div class="error" id="err_date"></div>
+<label>Moving Date & Time *</label>
+<input type="datetime-local" id="moveDate" required>
 
 <label>Van *</label>
-<select id="van">
+<select id="van" required>
 <option value="">Select</option>
-<option value="small">Small</option>
-<option value="medium">Medium</option>
-<option value="large">Large</option>
-<option value="luton">Luton</option>
+<option value="small">Small Van</option>
+<option value="medium">Medium Van</option>
+<option value="large">Large Van</option>
+<option value="luton">Luton Van</option>
 </select>
-<div class="error" id="err_van"></div>
 
 <label>Help *</label>
-<select id="help">
+<select id="help" required>
 <option value="">Select</option>
-<option value="0">Driver only</option>
-<option value="1">1 man</option>
-<option value="2">2 men</option>
-<option value="3">3 men</option>
+<option value="0">No help required</option>
+<option value="1">Driver help</option>
+<option value="2">Driver + 1 helper</option>
+<option value="3">Driver + 2 helpers</option>
 </select>
-<div class="error" id="err_help"></div>
 
-<label>Collection *</label>
-<input id="collection">
-<div class="error" id="err_collection"></div>
+<label>Collection Address *</label>
+<input type="text" id="collection" required>
 
-<label>Delivery *</label>
-<input id="delivery">
-<div class="error" id="err_delivery"></div>
+<label>Collection Stairs *</label>
+<select id="stairsCollection" required>
+<option value="0">Ground floor / Lift</option>
+<option value="1">1 Flight</option>
+<option value="2">2 Flights</option>
+<option value="3">3 Flights</option>
+<option value="4">4 Flights</option>
+</select>
 
-<button id="quoteBtn">Get Quote</button>
+<label>Via Address</label>
+<input type="text" id="via">
+
+<label>Via Stairs</label>
+<select id="stairsVia">
+<option value="0">Ground floor / Lift</option>
+<option value="1">1 Flight</option>
+<option value="2">2 Flights</option>
+<option value="3">3 Flights</option>
+<option value="4">4 Flights</option>
+</select>
+
+<label>Delivery Address *</label>
+<input type="text" id="delivery" required>
+
+<label>Delivery Stairs *</label>
+<select id="stairsDelivery" required>
+<option value="0">Ground floor / Lift</option>
+<option value="1">1 Flight</option>
+<option value="2">2 Flights</option>
+<option value="3">3 Flights</option>
+<option value="4">4 Flights</option>
+</select>
+
+<label>Additional Information</label>
+<textarea id="info"></textarea>
+
+<button type="submit" id="quoteBtn">Get My Instant Quote</button>
 
 </form>
 
 <div id="result" class="result"></div>
 
-<button id="whatsappBtn">WhatsApp</button>
-<button id="emailBtn">Email</button>
+<div id="bookingButtons" style="display:none;">
+<button id="whatsappBtn">Book via WhatsApp</button>
+<button id="emailBtn">Book via Email</button>
+</div>
 
 </div>
 
@@ -92,10 +120,7 @@ input.error,select.error{border:2px solid red;}
 
 emailjs.init("UTKviVTwg9BJjYixe");
 
-let ready=false;
-let message="";
-
-/* PRICING FIXED */
+/* RATE */
 function getRate(van, men){
 const pricing={
 small:[35,40,60,90],
@@ -106,42 +131,36 @@ luton:[40,50,70,100]
 return pricing[van][men];
 }
 
-/* VALIDATION */
-function validate(){
-
-let ok=true;
-
-function err(id,msg){
-document.getElementById(id).innerText=msg;
-ok=false;
-}
-
-function clear(id){
-document.getElementById(id).innerText="";
-}
-
-["name","email","phone","date","van","help","collection","delivery"].forEach(f=>{
-document.getElementById("err_"+f).innerText="";
-document.getElementById(f).classList.remove("error");
-});
-
-if(!name.value){err("err_name","Required");name.classList.add("error");}
-if(!email.value){err("err_email","Required");email.classList.add("error");}
-if(!phone.value){err("err_phone","Required");phone.classList.add("error");}
-if(!date.value || new Date(date.value)<=new Date()){err("err_date","Future date required");date.classList.add("error");}
-if(!van.value){err("err_van","Required");van.classList.add("error");}
-if(!help.value){err("err_help","Required");help.classList.add("error");}
-if(!collection.value){err("err_collection","Required");collection.classList.add("error");}
-if(!delivery.value){err("err_delivery","Required");delivery.classList.add("error");}
-
-return ok;
-}
+let fullMessage="";
+let ready=false;
 
 /* SUBMIT */
-form.onsubmit=function(e){
+quoteForm.addEventListener("submit",function(e){
 e.preventDefault();
 
-if(!validate()) return;
+/* SCROLL + VALIDARE */
+let fields=[name,email,phone,moveDate,van,help,collection,delivery];
+let firstError=null;
+
+fields.forEach(el=>{
+el.style.border="1px solid #ccc";
+if(!el.value || (el.id==="moveDate" && new Date(el.value)<=new Date())){
+el.style.border="2px solid red";
+if(!firstError) firstError=el;
+}
+});
+
+if(firstError){
+firstError.scrollIntoView({behavior:"smooth",block:"center"});
+firstError.focus();
+return;
+}
+
+calculate();
+});
+
+/* CALCUL */
+function calculate(){
 
 let men=parseInt(help.value);
 let rate=getRate(van.value,men);
@@ -153,37 +172,67 @@ let costHours=hours*rate;
 let costMiles=miles*1.5;
 let total=costHours+costMiles;
 
-let quote=`TOTAL: £${total.toFixed(2)}
+/* TEXT */
+let quote=`FAST ANY MOVES LTD
+
+TOTAL PRICE: £${total.toFixed(2)}
 
 Labour: £${costHours.toFixed(2)}
-Distance: £${costMiles.toFixed(2)}`;
+Distance: £${costMiles.toFixed(2)}
 
-result.innerText=quote;
+This quotation is based on the details provided by the customer.
 
-message=`Name: ${name.value}
+Any additional time required will be charged in 30-minute increments.`;
+
+/* FULL MESSAGE */
+fullMessage=`Fast Any Moves Booking
+
+Name: ${name.value}
 Phone: ${phone.value}
+Email: ${email.value}
+
+Move Date: ${new Date(moveDate.value).toLocaleString('en-GB')}
+
+Van: ${van.value}
+Help: ${help.options[help.selectedIndex].text}
+
+Collection: ${collection.value}
+Collection Stairs: ${stairsCollection.options[stairsCollection.selectedIndex].text}
+
+Via: ${via.value}
+Via Stairs: ${stairsVia.options[stairsVia.selectedIndex].text}
+
+Delivery: ${delivery.value}
+Delivery Stairs: ${stairsDelivery.options[stairsDelivery.selectedIndex].text}
+
+Additional Info:
+${info.value}
+
+--------------------------------
 
 ${quote}`;
 
+result.innerText=quote;
+bookingButtons.style.display="block";
 ready=true;
-};
+}
 
-/* EMAIL */
+/* EMAIL (TRIMITE LA CLIENT + TINE) */
 emailBtn.onclick=function(){
-if(!ready){alert("Calculate first");return;}
+if(!ready)return alert("Calculate first");
 
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{
-quote_breakdown: message,
+quote_breakdown: fullMessage,
 email: email.value
 })
-.then(()=>alert("Email sent successfully ✔"))
+.then(()=>alert("Email sent ✔"))
 .catch(()=>alert("Email failed ❌"));
 };
 
 /* WHATSAPP */
 whatsappBtn.onclick=function(){
-if(!ready){alert("Calculate first");return;}
-window.open("https://wa.me/447846769519?text="+encodeURIComponent(message));
+if(!ready)return alert("Calculate first");
+window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
 };
 
 </script>
