@@ -2,48 +2,47 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Fast Any Moves Ltd – Instant Moving Quote</title>
+<title>Fast Any Moves Ltd – Instant Quote</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
-body{font-family:'Poppins',sans-serif;background:#f4f7fb;margin:0;}
-.container{max-width:800px;margin:40px auto;background:white;padding:30px;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.12);}
+body{font-family:Poppins;background:#f4f7fb;margin:0;}
+.container{max-width:800px;margin:40px auto;background:white;padding:25px;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,.1);}
 h1{text-align:center;color:#0B4DBA;}
-h2{text-align:center;font-weight:400;color:#555;margin-bottom:25px;}
-label{font-weight:600;display:block;margin-top:15px;}
+label{display:block;margin-top:12px;font-weight:600;}
 input,select,textarea{width:100%;padding:12px;margin-top:5px;border-radius:6px;border:1px solid #ccc;}
-button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font-weight:600;cursor:pointer;}
-#quoteBtn{background:#0B4DBA;color:white;}
-#whatsappBtn{background:#25D366;color:white;}
-#emailBtn{background:#007bff;color:white;}
-.result{margin-top:25px;padding:20px;background:#eef5ff;border-radius:8px;white-space:pre-line;}
+button{width:100%;padding:15px;margin-top:10px;border:none;border-radius:6px;font-weight:600;cursor:pointer;}
+#quoteBtn{background:#0B4DBA;color:#fff;}
+#whatsappBtn{background:#25D366;color:#fff;}
+#emailBtn{background:#007bff;color:#fff;}
+.result{margin-top:20px;padding:20px;background:#eef5ff;border-radius:8px;}
+.loading{text-align:center;color:#555;}
+.error{color:red;text-align:center;}
 </style>
 </head>
 
 <body>
 
 <div class="container">
-
 <h1>Fast Any Moves Ltd</h1>
-<h2>Instant Moving Quote – London Man & Van</h2>
 
-<form id="quoteForm">
+<form id="form">
 
-<label>Name *</label>
-<input type="text" id="name" required>
+<label>Name*</label>
+<input id="name" required>
 
-<label>Email *</label>
-<input type="email" id="email" required>
+<label>Email*</label>
+<input id="email" type="email" required>
 
-<label>Phone *</label>
-<input type="text" id="phone" required>
+<label>Phone*</label>
+<input id="phone" required>
 
-<label>Moving Date & Time *</label>
-<input type="datetime-local" id="moveDate" required>
+<label>Move Date*</label>
+<input type="datetime-local" id="date" required>
 
-<label>Van *</label>
+<label>Van*</label>
 <select id="van" required>
 <option value="">Select</option>
 <option value="small">Small Van</option>
@@ -52,234 +51,168 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 <option value="luton">Luton Van</option>
 </select>
 
-<label>Help *</label>
+<label>Help*</label>
 <select id="help" required>
 <option value="">Select</option>
-<option value="0">No help required</option>
+<option value="0">No help</option>
 <option value="1">Driver help</option>
-<option value="2">Driver + 1 helper</option>
-<option value="3">Driver + 2 helpers</option>
+<option value="2">Driver +1 helper</option>
+<option value="3">Driver +2 helpers</option>
 </select>
 
-<label>Collection Address *</label>
-<input type="text" id="collection" required>
+<label>Collection Address*</label>
+<input id="collection" required>
 
-<label>Collection Stairs *</label>
-<select id="stairsCollection">
-<option value="0">Ground floor / Lift</option>
-<option value="1">1 Flight</option>
-<option value="2">2 Flights</option>
-<option value="3">3 Flights</option>
-<option value="4">4 Flights</option>
-</select>
+<label>Via Address (optional)</label>
+<input id="via">
 
-<label>Via Address</label>
-<input type="text" id="via">
+<label>Delivery Address*</label>
+<input id="delivery" required>
 
-<label>Via Stairs</label>
-<select id="stairsVia">
-<option value="0">Ground floor / Lift</option>
-<option value="1">1 Flight</option>
-<option value="2">2 Flights</option>
-<option value="3">3 Flights</option>
-<option value="4">4 Flights</option>
-</select>
-
-<label>Delivery Address *</label>
-<input type="text" id="delivery" required>
-
-<label>Delivery Stairs *</label>
-<select id="stairsDelivery">
-<option value="0">Ground floor / Lift</option>
-<option value="1">1 Flight</option>
-<option value="2">2 Flights</option>
-<option value="3">3 Flights</option>
-<option value="4">4 Flights</option>
-</select>
-
-<label>Additional Information</label>
-<textarea id="info"></textarea>
-
-<button type="submit" id="quoteBtn">Get My Instant Quote</button>
+<button id="quoteBtn">Get Instant Quote</button>
 
 </form>
 
 <div id="result" class="result"></div>
 
-<div id="bookingButtons" style="display:none;">
-<button id="whatsappBtn">Book via WhatsApp</button>
-<button id="emailBtn">Book via Email</button>
-</div>
+<button id="whatsappBtn" style="display:none;">Book via WhatsApp</button>
+<button id="emailBtn" style="display:none;">Send via Email</button>
 
 </div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
+<!-- ✅ GOOGLE API (CHEIA TA) -->
+<script defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
+
+<!-- ✅ EMAILJS -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
-
-/* AUTOCOMPLETE */
-window.onload=function(){
-new google.maps.places.Autocomplete(document.getElementById("collection"));
-new google.maps.places.Autocomplete(document.getElementById("via"));
-new google.maps.places.Autocomplete(document.getElementById("delivery"));
-};
-
 emailjs.init("UTKviVTwg9BJjYixe");
-
-/* FORMAT UK DATE */
-function formatDateUK(value){
-let d=new Date(value);
-return d.toLocaleString("en-GB",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
-}
 
 /* MIN DATE */
 let now=new Date();
 now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
-document.getElementById("moveDate").min=now.toISOString().slice(0,16);
+date.min=now.toISOString().slice(0,16);
 
+/* AUTOCOMPLETE */
+window.onload=()=>{
+ new google.maps.places.Autocomplete(collection);
+ new google.maps.places.Autocomplete(via);
+ new google.maps.places.Autocomplete(delivery);
+};
+
+/* DISTANCE */
+function getDistance(origin,destination){
+ return new Promise((resolve,reject)=>{
+  new google.maps.DistanceMatrixService().getDistanceMatrix({
+   origins:[origin],
+   destinations:[destination],
+   travelMode:"DRIVING"
+  },(res,status)=>{
+   if(status!=="OK") return reject(status);
+
+   let el=res.rows[0].elements[0];
+   if(el.status!=="OK") return reject("No route");
+
+   resolve({
+    distance:el.distance.value,
+    duration:el.duration.value
+   });
+  });
+ });
+}
+
+/* RATE */
 function getRate(van,men){
-return {
-small:[35,40,60,90],
-medium:[35,40,60,90],
-large:[40,50,70,100],
-luton:[40,50,70,100]
-}[van][men];
+ return {
+  small:[35,40,60,90],
+  medium:[35,40,60,90],
+  large:[40,50,70,100],
+  luton:[40,50,70,100]
+ }[van][men];
 }
 
-/* 🔥 SINGURA MODIFICARE */
-function validateAndScroll(){
-let fields=["name","email","phone","moveDate","van","help","collection","delivery"];
-let firstError=null;
+/* FORM */
+form.onsubmit = async e=>{
+ e.preventDefault();
 
-fields.forEach(id=>{
-let el=document.getElementById(id);
-el.style.border="1px solid #ccc";
+ if(!/^\+?44\d{9,10}$/.test(phone.value)){
+  alert("Enter valid UK phone number");
+  return;
+ }
 
-if(!el.value && !firstError){
-el.style.border="2px solid red";
-firstError=el;
-}
-});
+ result.innerHTML="<div class='loading'>Calculating your quote...</div>";
+ quoteBtn.disabled=true;
 
-if(firstError){
-firstError.scrollIntoView({behavior:"smooth",block:"center"});
-firstError.focus();
-return false;
-}
+ let men=parseInt(help.value);
+ let rate=getRate(van.value,men);
 
-return true;
-}
+ let totalDistance=0;
+ let totalDuration=0;
 
-let fullMessage="";
+ try{
 
-document.getElementById("quoteForm").addEventListener("submit",function(e){
-e.preventDefault();
+ if(via.value.trim()){
+  let a=await getDistance(collection.value,via.value);
+  let b=await getDistance(via.value,delivery.value);
+  totalDistance=a.distance+b.distance;
+  totalDuration=a.duration+b.duration;
+ }else{
+  let trip=await getDistance(collection.value,delivery.value);
+  totalDistance=trip.distance;
+  totalDuration=trip.duration;
+ }
 
-/* 🔥 AICI SE FOLOSEȘTE */
-if(!validateAndScroll()) return;
+ let miles=totalDistance/1609.34;
+ let hours=Math.ceil((totalDuration/3600)*2)/2;
+ if(hours<2) hours=2;
 
-/* RESTUL CODULUI RĂMÂNE IDENTIC */
+ let costHours=hours*rate;
+ let costMiles=miles*1.5;
 
-let nameValue=document.getElementById("name").value.trim();
-if(!nameValue) nameValue="N/A";
+ let congestion=/(EC|WC|W1|SW1|SE1)/.test((collection.value+via.value+delivery.value).toUpperCase())?18:0;
 
-let phone=document.getElementById("phone").value;
-let email=document.getElementById("email").value;
+ let total=costHours+costMiles+congestion;
+ if(total<60) total=60;
 
-let men=parseInt(help.value);
-let rate=getRate(van.value,men);
+ let quote=`TOTAL: £${total.toFixed(2)}
+Time: ${hours} hours
+Distance: ${miles.toFixed(2)} miles`;
 
-let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
-let costStairs=men===0?0:stairsTotal*10*men;
+ result.innerHTML="<b>"+quote+"</b>";
 
-new google.maps.DistanceMatrixService().getDistanceMatrix({
-origins:[collection.value],
-destinations:[delivery.value],
-travelMode:"DRIVING"
-},function(r){
+ window.fullMessage = `
+Fast Any Moves Booking
 
-let el=r.rows[0].elements[0];
+Name: ${name.value}
+Phone: ${phone.value}
+Email: ${email.value}
 
-let miles=el.distance.value/1609.34;
-let travelTime=el.duration.value;
+${quote}
+`;
 
-let load=[40,30,20,15][men]*60;
-let stairsTime=stairsTotal*600;
+ whatsappBtn.style.display="block";
+ emailBtn.style.display="block";
 
-let totalTime=travelTime+load+stairsTime;
+ }catch(err){
+  result.innerHTML="<div class='error'>Could not calculate route. Check addresses.</div>";
+ }
 
-let hours=Math.ceil((totalTime/3600)*2)/2;
-if(hours<2)hours=2;
-
-let costHours=hours*rate;
-let costMiles=miles*1.5;
-
-let congestion=/(EC|WC|W1|SW1|SE1)/.test((collection.value+via.value+delivery.value).toUpperCase())?18:0;
-
-let total=costHours+costMiles+costStairs+congestion;
-
-let quote=`FAST ANY MOVES LTD
-
-Estimated working time: ${hours} hours
-Distance: ${miles.toFixed(2)} miles
-
-TOTAL PRICE: £${total.toFixed(2)}
-
-Labour: ${hours}h × £${rate} = £${costHours.toFixed(2)}
-Distance: ${miles.toFixed(2)} × £1.50 = £${costMiles.toFixed(2)}
-Stairs: £${costStairs.toFixed(2)}
-Congestion: £${congestion.toFixed(2)}
-
-This estimate is based on the details provided.
-
-Any additional time will be charged in 30-minute increments.`;
-
-fullMessage=`Fast Any Moves Booking
-
-Name: ${nameValue}
-Phone: ${phone}
-Email: ${email}
-
-Move Date: ${formatDateUK(document.getElementById("moveDate").value)}
-
-Van: ${van.options[van.selectedIndex].text}
-Help: ${help.options[help.selectedIndex].text}
-
-Collection: ${collection.value}
-Collection Stairs: ${stairsCollection.options[stairsCollection.selectedIndex].text}
-
-Via: ${via.value}
-Via Stairs: ${stairsVia.options[stairsVia.selectedIndex].text}
-
-Delivery: ${delivery.value}
-Delivery Stairs: ${stairsDelivery.options[stairsDelivery.selectedIndex].text}
-
-Additional Info:
-${info.value}
-
---------------------------------
-
-${quote}`;
-
-document.getElementById("result").innerText=quote;
-document.getElementById("bookingButtons").style.display="block";
-
-});
-});
-
-document.getElementById("emailBtn").onclick=function(){
-emailjs.send("service_1e9jyk9","template_0tbv6y9",{
-quote_breakdown: fullMessage,
-email: document.getElementById("email").value
-})
-.then(()=>alert("Email sent ✔"));
+ quoteBtn.disabled=false;
 };
 
-document.getElementById("whatsappBtn").onclick=function(){
-window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
+/* EMAIL */
+emailBtn.onclick=()=>{
+ emailjs.send("service_1e9jyk9","template_0tbv6y9",{
+  quote_breakdown: fullMessage,
+  email: email.value
+ }).then(()=>alert("Email sent ✔"));
 };
 
+/* WHATSAPP */
+whatsappBtn.onclick=()=>{
+ window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
+};
 </script>
 
 </body>
