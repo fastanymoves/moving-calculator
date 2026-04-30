@@ -113,10 +113,7 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 
 </div>
 
-<!-- GOOGLE -->
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
-
-<!-- EMAIL -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
@@ -124,7 +121,7 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 emailjs.init("UTKviVTwg9BJjYixe");
 
 /* AUTOCOMPLETE FIX */
-window.addEventListener("load", function(){
+window.addEventListener("load",()=>{
 const opt={componentRestrictions:{country:"uk"}};
 new google.maps.places.Autocomplete(document.getElementById("collection"),opt);
 new google.maps.places.Autocomplete(document.getElementById("via"),opt);
@@ -137,7 +134,7 @@ now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
 moveDate.min=now.toISOString().slice(0,16);
 
 /* VALIDARE + SCROLL */
-document.getElementById("quoteForm").addEventListener("submit",function(e){
+quoteForm.addEventListener("submit",function(e){
 e.preventDefault();
 
 let fields=["name","email","phone","moveDate","van","help","collection","delivery"];
@@ -155,14 +152,13 @@ if(!firstError) firstError=el;
 
 if(firstError){
 firstError.scrollIntoView({behavior:"smooth",block:"center"});
-firstError.focus();
 return;
 }
 
 calculateQuote();
 });
 
-/* CALCUL REAL */
+/* CALCUL + BREAKDOWN PRO */
 function calculateQuote(){
 
 let men=parseInt(help.value);
@@ -171,28 +167,24 @@ let rate=[45,50,100,120][men];
 let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
 let costStairs=stairsTotal*10*men;
 
-const collectionVal=collection.value;
-const viaVal=via.value;
-const deliveryVal=delivery.value;
+let segments=via.value?
+[{origin:collection.value,destination:via.value},{origin:via.value,destination:delivery.value}]
+:[{origin:collection.value,destination:delivery.value}];
 
-const segments=viaVal?
-[{origin:collectionVal,destination:viaVal},{origin:viaVal,destination:deliveryVal}]
-:[{origin:collectionVal,destination:deliveryVal}];
+let meters=0,seconds=0,done=0;
 
-let totalMeters=0,totalSeconds=0,done=0;
-
-segments.forEach(seg=>{
+segments.forEach(s=>{
 new google.maps.DistanceMatrixService().getDistanceMatrix({
-origins:[seg.origin],
-destinations:[seg.destination],
+origins:[s.origin],
+destinations:[s.destination],
 travelMode:"DRIVING"
-},function(res){
+},function(r){
 
-let el=res.rows[0].elements[0];
+let el=r.rows[0].elements[0];
 if(el.status!=="OK"){alert("Invalid address");return;}
 
-totalMeters+=el.distance.value;
-totalSeconds+=el.duration.value;
+meters+=el.distance.value;
+seconds+=el.duration.value;
 done++;
 
 if(done===segments.length) finish();
@@ -201,18 +193,14 @@ if(done===segments.length) finish();
 
 function finish(){
 
-let miles=totalMeters/1609.34;
-let costMiles=miles*1.5;
-
-let load=[40,30,20,15][men]*60;
-let totalTime=totalSeconds+load+(stairsTotal*600);
-
-let hours=Math.ceil((totalTime/3600)*2)/2;
+let miles=meters/1609.34;
+let hours=Math.ceil((seconds/3600)*2)/2;
 if(hours<2)hours=2;
 
 let costHours=hours*rate;
+let costMiles=miles*1.5;
 
-let congestion=/(EC|WC|W1|SW1|SE1)/.test((collectionVal+viaVal+deliveryVal).toUpperCase())?18:0;
+let congestion=/(EC|WC|W1|SW1|SE1)/.test((collection.value+via.value+delivery.value).toUpperCase())?18:0;
 
 let total=costHours+costMiles+costStairs+congestion;
 
@@ -253,26 +241,24 @@ Any additional time required will be charged in 30-minute increments.`;
 result.innerText=quote;
 bookingButtons.style.display="block";
 
-let formattedDate=formatDate(moveDate.value);
-
 fullMessage=`Fast Any Moves Booking
 
 Name: ${name.value}
 Phone: ${phone.value}
 Email: ${email.value}
 
-Move Date: ${formattedDate}
+Move Date: ${new Date(moveDate.value).toLocaleString('en-GB')}
 
 Van: ${van.value}
 Help: ${help.options[help.selectedIndex].text}
 
-Collection: ${collectionVal}
+Collection: ${collection.value}
 Collection Stairs: ${stairsCollection.options[stairsCollection.selectedIndex].text}
 
-Via: ${viaVal}
+Via: ${via.value}
 Via Stairs: ${stairsVia.options[stairsVia.selectedIndex].text}
 
-Delivery: ${deliveryVal}
+Delivery: ${delivery.value}
 Delivery Stairs: ${stairsDelivery.options[stairsDelivery.selectedIndex].text}
 
 Additional Info:
@@ -281,18 +267,12 @@ ${info.value}
 ${quote}`;
 
 quoteCalculated=true;
-
 }
 
-}
-
-function formatDate(val){
-let d=new Date(val);
-return d.toLocaleString('en-GB');
 }
 
 /* EMAIL */
-emailBtn.onclick=function(){
+emailBtn.onclick=()=>{
 if(!quoteCalculated)return alert("Calculate first");
 
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{
@@ -304,7 +284,7 @@ email: email.value
 };
 
 /* WHATSAPP */
-whatsappBtn.onclick=function(){
+whatsappBtn.onclick=()=>{
 if(!quoteCalculated)return alert("Calculate first");
 window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
 };
