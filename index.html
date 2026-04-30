@@ -13,13 +13,14 @@ body{font-family:'Poppins',sans-serif;background:#f4f7fb;margin:0;}
 h1{text-align:center;color:#0B4DBA;}
 h2{text-align:center;font-weight:400;color:#555;margin-bottom:25px;}
 label{font-weight:600;display:block;margin-top:15px;}
-
 input,select,textarea{
 width:100%;
 padding:12px;
 margin-top:5px;
 border-radius:6px;
 border:1px solid #ccc;
+
+/* 🔥 elimină stil mobil */
 appearance:none;
 -webkit-appearance:none;
 }
@@ -38,14 +39,15 @@ margin-top:5px;
 display:none;
 }
 
-/* 🔥 invalid style */
-input.invalid, select.invalid{
+/* 🔥 forțare invalid */
+input.invalid{
 border:2px solid red !important;
 box-shadow:0 0 0 2px rgba(255,0,0,0.2);
 }
 
-.invalid::placeholder{
-color:#ff4d4d;
+input:focus:invalid{
+outline:none;
+box-shadow:0 0 0 2px red;
 }
 </style>
 </head>
@@ -147,22 +149,25 @@ color:#ff4d4d;
 
 <script>
 
+/* AUTOCOMPLETE */
 window.onload=function(){
-new google.maps.places.Autocomplete(collection);
-new google.maps.places.Autocomplete(via);
-new google.maps.places.Autocomplete(delivery);
+new google.maps.places.Autocomplete(document.getElementById("collection"));
+new google.maps.places.Autocomplete(document.getElementById("via"));
+new google.maps.places.Autocomplete(document.getElementById("delivery"));
 };
 
 emailjs.init("UTKviVTwg9BJjYixe");
 
+/* FORMAT DATE */
 function formatDateUK(value){
 let d=new Date(value);
 return d.toLocaleString("en-GB",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
 }
 
+/* MIN DATE */
 let now=new Date();
 now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
-moveDate.min=now.toISOString().slice(0,16);
+document.getElementById("moveDate").min=now.toISOString().slice(0,16);
 
 function getRate(van,men){
 return {
@@ -173,65 +178,58 @@ luton:[40,50,70,100]
 }[van][men];
 }
 
-/* 🔥 VALIDARE FINALĂ */
+/* 🔥 VALIDARE CU SCROLL REAL */
 function validateAndScroll(){
 
 let fields=["name","email","phone","moveDate","van","help","collection","delivery"];
 let firstError=null;
 
-dateError.style.display="none";
+document.getElementById("dateError").style.display="none";
 
 fields.forEach(id=>{
 let el=document.getElementById(id);
 el.classList.remove("invalid");
 
-/* DATE */
+/* VALIDARE DATĂ */
 if(id==="moveDate"){
+
 if(!el.value){
 el.classList.add("invalid");
-dateError.style.display="block";
+document.getElementById("dateError").style.display="block";
 if(!firstError) firstError=el;
 return;
 }
-let selected=new Date(el.value);
-if(selected.getTime() <= Date.now()){
+
+let selected = new Date(el.value);
+let now = new Date();
+
+if(selected.getTime() <= now.getTime()){
 el.classList.add("invalid");
-dateError.style.display="block";
+document.getElementById("dateError").style.display="block";
 if(!firstError) firstError=el;
 return;
 }
 }
 
-/* NORMAL */
-if(!el.value){
+/* VALIDARE NORMALĂ */
+if(!el.value && !firstError){
 el.classList.add("invalid");
-if(!firstError) firstError=el;
+firstError=el;
 }
 });
 
-/* 🔥 SCROLL FIX */
 if(firstError){
 
-let rect=firstError.getBoundingClientRect();
-let offset=160;
+const y = firstError.getBoundingClientRect().top + window.pageYOffset - 120;
 
 window.scrollTo({
-top: rect.top + window.pageYOffset - offset,
-behavior:"smooth"
+top: y,
+behavior: "smooth"
 });
 
-/* retry focus */
 setTimeout(()=>{
 firstError.focus();
-
-let rect2=firstError.getBoundingClientRect();
-if(rect2.top < 0 || rect2.top > window.innerHeight){
-window.scrollTo({
-top: rect2.top + window.pageYOffset - offset,
-behavior:"smooth"
-});
-}
-},500);
+},400);
 
 return false;
 }
@@ -241,38 +239,59 @@ return true;
 
 let fullMessage="";
 
-quoteForm.addEventListener("submit",function(e){
+document.getElementById("quoteForm").addEventListener("submit",function(e){
 e.preventDefault();
 
 if(!validateAndScroll()) return;
 
+let nameValue=document.getElementById("name").value.trim() || "N/A";
+let phone=document.getElementById("phone").value;
+let email=document.getElementById("email").value;
+
 let men=parseInt(help.value);
 let rate=getRate(van.value,men);
 
-let stairsTotal=+stairsCollection.value+ +stairsVia.value+ +stairsDelivery.value;
+let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
 let costStairs=men===0?0:stairsTotal*10*men;
 
 let service=new google.maps.DistanceMatrixService();
-let viaValue=via.value;
+let viaValue=document.getElementById("via").value;
 
 if(viaValue){
 
-service.getDistanceMatrix({origins:[collection.value],destinations:[viaValue],travelMode:"DRIVING"},function(r1){
+service.getDistanceMatrix({
+origins:[collection.value],
+destinations:[viaValue],
+travelMode:"DRIVING"
+},function(r1){
+
 let el1=r1.rows[0].elements[0];
 
-service.getDistanceMatrix({origins:[viaValue],destinations:[delivery.value],travelMode:"DRIVING"},function(r2){
-calculate(el1,r2.rows[0].elements[0]);
+service.getDistanceMatrix({
+origins:[viaValue],
+destinations:[delivery.value],
+travelMode:"DRIVING"
+},function(r2){
+
+calculate(el1, r2.rows[0].elements[0]);
+
 });
 });
 
 }else{
 
-service.getDistanceMatrix({origins:[collection.value],destinations:[delivery.value],travelMode:"DRIVING"},function(r){
-calculate(r.rows[0].elements[0],null);
+service.getDistanceMatrix({
+origins:[collection.value],
+destinations:[delivery.value],
+travelMode:"DRIVING"
+},function(r){
+
+calculate(r.rows[0].elements[0], null);
+
 });
 }
 
-function calculate(el1,el2){
+function calculate(el1, el2){
 
 let distance=el1.distance.value;
 let duration=el1.duration.value;
@@ -283,27 +302,84 @@ duration+=el2.duration.value;
 }
 
 let miles=distance/1609.34;
-let totalTime=duration + [40,30,20,15][men]*60 + stairsTotal*600;
+let travelTime=duration;
+
+let load=[40,30,20,15][men]*60;
+let stairsTime=stairsTotal*600;
+
+let totalTime=travelTime+load+stairsTime;
 
 let hours=Math.ceil((totalTime/3600)*2)/2;
 if(hours<2)hours=2;
 
-let total=hours*rate + miles*1.5 + costStairs +
-(/(EC|WC|W1|SW1|SE1)/.test((collection.value+via.value+delivery.value).toUpperCase())?18:0);
+let costHours=hours*rate;
+let costMiles=miles*1.5;
 
-let quote=`TOTAL PRICE: £${total.toFixed(2)}\nTime: ${hours}h\nDistance: ${miles.toFixed(2)} miles`;
+let congestion=/(EC|WC|W1|SW1|SE1)/.test((collection.value+via.value+delivery.value).toUpperCase())?18:0;
 
-fullMessage=quote;
+let total=costHours+costMiles+costStairs+congestion;
 
-result.innerText=quote;
-bookingButtons.style.display="block";
+let quote=`FAST ANY MOVES LTD
+
+Estimated working time: ${hours} hours
+Distance: ${miles.toFixed(2)} miles
+
+TOTAL PRICE: £${total.toFixed(2)}
+
+Labour: ${hours}h × £${rate} = £${costHours.toFixed(2)}
+Distance: ${miles.toFixed(2)} × £1.50 = £${costMiles.toFixed(2)}
+Stairs: £${costStairs.toFixed(2)}
+Congestion: £${congestion.toFixed(2)}
+
+This estimate is based on the details provided.
+
+Any additional time will be charged in 30-minute increments.`;
+
+fullMessage=`Fast Any Moves Booking
+
+Name: ${nameValue}
+Phone: ${phone}
+Email: ${email}
+
+Move Date: ${formatDateUK(document.getElementById("moveDate").value)}
+
+Van: ${van.options[van.selectedIndex].text}
+Help: ${help.options[help.selectedIndex].text}
+
+Collection: ${collection.value}
+Collection Stairs: ${stairsCollection.options[stairsCollection.selectedIndex].text}
+
+Via: ${via.value}
+Via Stairs: ${stairsVia.options[stairsVia.selectedIndex].text}
+
+Delivery: ${delivery.value}
+Delivery Stairs: ${stairsDelivery.options[stairsDelivery.selectedIndex].text}
+
+Additional Info:
+${info.value}
+
+--------------------------------
+
+${quote}`;
+
+document.getElementById("result").innerText=quote;
+document.getElementById("bookingButtons").style.display="block";
+
 }
 
 });
 
-emailBtn.onclick=()=>emailjs.send("service_1e9jyk9","template_0tbv6y9",{quote_breakdown:fullMessage,email:email.value}).then(()=>alert("Email sent ✔"));
+document.getElementById("emailBtn").onclick=function(){
+emailjs.send("service_1e9jyk9","template_0tbv6y9",{
+quote_breakdown: fullMessage,
+email: document.getElementById("email").value
+})
+.then(()=>alert("Email sent ✔"));
+};
 
-whatsappBtn.onclick=()=>window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
+document.getElementById("whatsappBtn").onclick=function(){
+window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
+};
 
 </script>
 
