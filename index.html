@@ -17,9 +17,8 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 #whatsappBtn{background:#25D366;color:white;}
 #emailBtn{background:#007bff;color:white;}
 .result{margin-top:25px;padding:20px;background:#eef5ff;border-radius:8px;white-space:pre-line;}
-
 .error{color:red;font-size:13px;}
-.error-input{border:2px solid red;}
+input.error,select.error{border:2px solid red;}
 </style>
 </head>
 
@@ -29,19 +28,23 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 
 <h2>Fast Any Moves Ltd – Instant Quote</h2>
 
-<form id="quoteForm">
+<form id="form">
 
 <label>Name *</label>
-<input id="name"><div class="error" id="err_name"></div>
+<input id="name">
+<div class="error" id="err_name"></div>
 
 <label>Email *</label>
-<input id="email"><div class="error" id="err_email"></div>
+<input id="email">
+<div class="error" id="err_email"></div>
 
 <label>Phone *</label>
-<input id="phone"><div class="error" id="err_phone"></div>
+<input id="phone">
+<div class="error" id="err_phone"></div>
 
 <label>Date *</label>
-<input type="datetime-local" id="moveDate"><div class="error" id="err_moveDate"></div>
+<input type="datetime-local" id="date">
+<div class="error" id="err_date"></div>
 
 <label>Van *</label>
 <select id="van">
@@ -50,57 +53,28 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 <option value="medium">Medium</option>
 <option value="large">Large</option>
 <option value="luton">Luton</option>
-</select><div class="error" id="err_van"></div>
+</select>
+<div class="error" id="err_van"></div>
 
 <label>Help *</label>
 <select id="help">
 <option value="">Select</option>
 <option value="0">Driver only</option>
-<option value="1">Driver help</option>
-<option value="2">Driver + 1 helper</option>
-<option value="3">Driver + 2 helpers</option>
-</select><div class="error" id="err_help"></div>
+<option value="1">1 man</option>
+<option value="2">2 men</option>
+<option value="3">3 men</option>
+</select>
+<div class="error" id="err_help"></div>
 
 <label>Collection *</label>
-<input id="collection"><div class="error" id="err_collection"></div>
-
-<label>Collection Stairs *</label>
-<select id="stairsCollection">
-<option value="0">Ground floor / Lift</option>
-<option value="1">1 Flight</option>
-<option value="2">2 Flights</option>
-<option value="3">3 Flights</option>
-<option value="4">4 Flights</option>
-</select>
-
-<label>Via</label>
-<input id="via">
-
-<label>Via Stairs</label>
-<select id="stairsVia">
-<option value="0">Ground floor / Lift</option>
-<option value="1">1 Flight</option>
-<option value="2">2 Flights</option>
-<option value="3">3 Flights</option>
-<option value="4">4 Flights</option>
-</select>
+<input id="collection">
+<div class="error" id="err_collection"></div>
 
 <label>Delivery *</label>
-<input id="delivery"><div class="error" id="err_delivery"></div>
+<input id="delivery">
+<div class="error" id="err_delivery"></div>
 
-<label>Delivery Stairs *</label>
-<select id="stairsDelivery">
-<option value="0">Ground floor / Lift</option>
-<option value="1">1 Flight</option>
-<option value="2">2 Flights</option>
-<option value="3">3 Flights</option>
-<option value="4">4 Flights</option>
-</select>
-
-<label>Additional Info</label>
-<textarea id="info"></textarea>
-
-<button type="submit">Get Quote</button>
+<button id="quoteBtn">Get Quote</button>
 
 </form>
 
@@ -111,6 +85,7 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 
 </div>
 
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
@@ -118,9 +93,9 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 emailjs.init("UTKviVTwg9BJjYixe");
 
 let ready=false;
-let fullMessage="";
+let message="";
 
-/* PRICING */
+/* PRICING FIXED */
 function getRate(van, men){
 const pricing={
 small:[35,40,60,90],
@@ -131,59 +106,42 @@ luton:[40,50,70,100]
 return pricing[van][men];
 }
 
-/* VALIDARE */
-const fields=["name","email","phone","moveDate","van","help","collection","delivery"];
+/* VALIDATION */
+function validate(){
 
-function validateField(id){
-let el=document.getElementById(id);
-let err=document.getElementById("err_"+id);
+let ok=true;
 
-err.innerText="";
-el.classList.remove("error-input");
-
-if(!el.value){
-err.innerText="Required";
-el.classList.add("error-input");
-return false;
+function err(id,msg){
+document.getElementById(id).innerText=msg;
+ok=false;
 }
 
-if(id==="moveDate" && new Date(el.value)<=new Date()){
-err.innerText="Future date required";
-el.classList.add("error-input");
-return false;
+function clear(id){
+document.getElementById(id).innerText="";
 }
 
-return true;
-}
-
-function validateAll(){
-let first=null;
-
-fields.forEach(id=>{
-if(!validateField(id) && !first){
-first=document.getElementById(id);
-}
+["name","email","phone","date","van","help","collection","delivery"].forEach(f=>{
+document.getElementById("err_"+f).innerText="";
+document.getElementById(f).classList.remove("error");
 });
 
-if(first){
-first.scrollIntoView({behavior:"smooth",block:"center"});
-first.focus();
-return false;
-}
+if(!name.value){err("err_name","Required");name.classList.add("error");}
+if(!email.value){err("err_email","Required");email.classList.add("error");}
+if(!phone.value){err("err_phone","Required");phone.classList.add("error");}
+if(!date.value || new Date(date.value)<=new Date()){err("err_date","Future date required");date.classList.add("error");}
+if(!van.value){err("err_van","Required");van.classList.add("error");}
+if(!help.value){err("err_help","Required");help.classList.add("error");}
+if(!collection.value){err("err_collection","Required");collection.classList.add("error");}
+if(!delivery.value){err("err_delivery","Required");delivery.classList.add("error");}
 
-return true;
+return ok;
 }
-
-/* LIVE VALIDARE */
-fields.forEach(id=>{
-document.getElementById(id).addEventListener("input",()=>validateField(id));
-});
 
 /* SUBMIT */
-quoteForm.onsubmit=function(e){
+form.onsubmit=function(e){
 e.preventDefault();
 
-if(!validateAll()) return;
+if(!validate()) return;
 
 let men=parseInt(help.value);
 let rate=getRate(van.value,men);
@@ -202,9 +160,8 @@ Distance: £${costMiles.toFixed(2)}`;
 
 result.innerText=quote;
 
-fullMessage=`Name: ${name.value}
+message=`Name: ${name.value}
 Phone: ${phone.value}
-Email: ${email.value}
 
 ${quote}`;
 
@@ -213,20 +170,20 @@ ready=true;
 
 /* EMAIL */
 emailBtn.onclick=function(){
-if(!ready)return alert("Calculate first");
+if(!ready){alert("Calculate first");return;}
 
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{
-quote_breakdown: fullMessage,
+quote_breakdown: message,
 email: email.value
 })
-.then(()=>alert("Email sent ✔"))
+.then(()=>alert("Email sent successfully ✔"))
 .catch(()=>alert("Email failed ❌"));
 };
 
 /* WHATSAPP */
 whatsappBtn.onclick=function(){
-if(!ready)return alert("Calculate first");
-window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
+if(!ready){alert("Calculate first");return;}
+window.open("https://wa.me/447846769519?text="+encodeURIComponent(message));
 };
 
 </script>
