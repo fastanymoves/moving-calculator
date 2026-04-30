@@ -113,14 +113,22 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 
 </div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
+<!-- ✅ GOOGLE FIX -->
+<script>
+function initAutocomplete(){
+new google.maps.places.Autocomplete(document.getElementById('collection'));
+new google.maps.places.Autocomplete(document.getElementById('via'));
+new google.maps.places.Autocomplete(document.getElementById('delivery'));
+}
+</script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places&callback=initAutocomplete" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
 
 emailjs.init("UTKviVTwg9BJjYixe");
 
-/* RATE */
 function getRate(van, men){
 const pricing={
 small:[35,40,60,90],
@@ -131,19 +139,29 @@ luton:[40,50,70,100]
 return pricing[van][men];
 }
 
+let quoteCalculated=false;
 let fullMessage="";
-let ready=false;
 
-/* SUBMIT */
-quoteForm.addEventListener("submit",function(e){
+/* ✅ VALIDARE + SCROLL FIX */
+document.getElementById("quoteForm").addEventListener("submit",function(e){
 e.preventDefault();
 
-/* SCROLL + VALIDARE */
-let fields=[name,email,phone,moveDate,van,help,collection,delivery];
+let fields=[
+document.getElementById("name"),
+document.getElementById("email"),
+document.getElementById("phone"),
+document.getElementById("moveDate"),
+document.getElementById("van"),
+document.getElementById("help"),
+document.getElementById("collection"),
+document.getElementById("delivery")
+];
+
 let firstError=null;
 
 fields.forEach(el=>{
 el.style.border="1px solid #ccc";
+
 if(!el.value || (el.id==="moveDate" && new Date(el.value)<=new Date())){
 el.style.border="2px solid red";
 if(!firstError) firstError=el;
@@ -156,35 +174,67 @@ firstError.focus();
 return;
 }
 
-calculate();
+calculateQuote();
 });
 
-/* CALCUL */
-function calculate(){
+function calculateQuote(){
 
 let men=parseInt(help.value);
-let rate=getRate(van.value,men);
+let rate=getRate(van.value, men);
 
-let miles=10;
-let hours=2;
+let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
+let costStairs=stairsTotal*10*men;
+
+const collectionValue=collection.value;
+const viaValue=via.value;
+const deliveryValue=delivery.value;
+
+const segments=viaValue?
+[{origin:collectionValue,destination:viaValue},{origin:viaValue,destination:deliveryValue}]
+:[{origin:collectionValue,destination:deliveryValue}];
+
+let totalMeters=0,totalSeconds=0,done=0;
+
+segments.forEach(seg=>{
+new google.maps.DistanceMatrixService().getDistanceMatrix({
+origins:[seg.origin],
+destinations:[seg.destination],
+travelMode:"DRIVING"
+},function(res){
+let el=res.rows[0].elements[0];
+
+if(el.status!=="OK"){
+alert("Invalid address");
+return;
+}
+
+totalMeters+=el.distance.value;
+totalSeconds+=el.duration.value;
+done++;
+if(done===segments.length) finish(totalMeters,totalSeconds);
+});
+});
+
+function finish(meters,seconds){
+
+let miles=meters/1609.34;
+let costMiles=miles*1.5;
+
+let load=[40,30,20,15][men]*60;
+let totalTime=seconds+load+(stairsTotal*600);
+
+let hours=Math.ceil((totalTime/3600)*2)/2;
+if(hours<2)hours=2;
 
 let costHours=hours*rate;
-let costMiles=miles*1.5;
-let total=costHours+costMiles;
 
-/* TEXT */
-let quote=`FAST ANY MOVES LTD
+let total=costHours+costMiles+costStairs;
 
-TOTAL PRICE: £${total.toFixed(2)}
+let quote=`TOTAL PRICE: £${total.toFixed(2)}`;
 
-Labour: £${costHours.toFixed(2)}
-Distance: £${costMiles.toFixed(2)}
+result.innerText=quote;
+bookingButtons.style.display="block";
 
-This quotation is based on the details provided by the customer.
-
-Any additional time required will be charged in 30-minute increments.`;
-
-/* FULL MESSAGE */
 fullMessage=`Fast Any Moves Booking
 
 Name: ${name.value}
@@ -208,18 +258,17 @@ Delivery Stairs: ${stairsDelivery.options[stairsDelivery.selectedIndex].text}
 Additional Info:
 ${info.value}
 
---------------------------------
-
 ${quote}`;
 
-result.innerText=quote;
-bookingButtons.style.display="block";
-ready=true;
+quoteCalculated=true;
+
 }
 
-/* EMAIL (TRIMITE LA CLIENT + TINE) */
+}
+
+/* EMAIL */
 emailBtn.onclick=function(){
-if(!ready)return alert("Calculate first");
+if(!quoteCalculated)return alert("Calculate first");
 
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{
 quote_breakdown: fullMessage,
@@ -231,7 +280,7 @@ email: email.value
 
 /* WHATSAPP */
 whatsappBtn.onclick=function(){
-if(!ready)return alert("Calculate first");
+if(!quoteCalculated)return alert("Calculate first");
 window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
 };
 
