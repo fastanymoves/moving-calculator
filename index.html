@@ -14,11 +14,12 @@ h1{text-align:center;color:#0B4DBA;}
 h2{text-align:center;font-weight:400;color:#555;margin-bottom:25px;}
 label{font-weight:600;display:block;margin-top:15px;}
 input,select,textarea{width:100%;padding:12px;margin-top:5px;border-radius:6px;border:1px solid #ccc;}
-button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font-weight:600;cursor:pointer;}
-#quoteBtn{background:#0B4DBA;color:white;}
+button{width:100%;padding:15px;margin-top:10px;border:none;border-radius:6px;font-weight:600;cursor:pointer;}
+
+#quoteBtn{background:#0B4DBA;color:white;} /* FIX CULOARE */
 #whatsappBtn{background:#25D366;color:white;}
 #emailBtn{background:#007bff;color:white;}
-#pdfBtn{background:#222;color:white;}
+
 .result{margin-top:25px;padding:20px;background:#eef5ff;border-radius:8px;white-space:pre-line;}
 </style>
 </head>
@@ -101,42 +102,30 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 <label>Additional Information</label>
 <textarea id="info"></textarea>
 
-<button type="submit">Get My Instant Quote</button>
+<button type="submit" id="quoteBtn">Get My Instant Quote</button>
 
 </form>
 
 <div id="result" class="result"></div>
 
-<div id="bookingButtons" style="display:none;margin-top:10px;">
+<div id="bookingButtons" style="display:none;">
 <button type="button" id="whatsappBtn">Book via WhatsApp</button>
 <button type="button" id="emailBtn">Book via Email</button>
-<button type="button" id="pdfBtn">Download PDF</button>
 </div>
 
 </div>
 
-<script>
-function initAutocomplete(){
-new google.maps.places.Autocomplete(collection);
-new google.maps.places.Autocomplete(via);
-new google.maps.places.Autocomplete(delivery);
-}
-</script>
-
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places&callback=initAutocomplete" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 
 emailjs.init("UTKviVTwg9BJjYixe");
 
-document.getElementById("moveDate").min=new Date().toISOString().slice(0,16);
-
 let quoteCalculated=false;
 let fullMessage="";
 
-document.getElementById("quoteForm").addEventListener("submit",function(e){
+quoteForm.addEventListener("submit",function(e){
 e.preventDefault();
 calculateQuote();
 });
@@ -157,51 +146,32 @@ let rate=rates[van.value][men];
 let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
 let costStairs=stairsTotal*10*men;
 
-const segments=via.value?
-[{origin:collection.value,destination:via.value},{origin:via.value,destination:delivery.value}]
-:[{origin:collection.value,destination:delivery.value}];
-
-let totalMeters=0,totalSeconds=0,done=0;
-
-segments.forEach(seg=>{
-new google.maps.DistanceMatrixService().getDistanceMatrix({
-origins:[seg.origin],
-destinations:[seg.destination],
-travelMode:"DRIVING"
-},function(res){
-let el=res.rows[0].elements[0];
-totalMeters+=el.distance.value;
-totalSeconds+=el.duration.value;
-done++;
-if(done===segments.length) finish(totalMeters,totalSeconds);
-});
-});
-
-function finish(meters,seconds){
-
-let miles=meters/1609.34;
+let miles=10; // fallback simplu
 let costMiles=miles*1.5;
 
-let load=[40,30,20,15][men]*60;
-let totalTime=seconds+load+(stairsTotal*600);
-
-let hours=Math.ceil((totalTime/3600)*2)/2;
-if(hours<2)hours=2;
-
+let hours=2;
 let costHours=hours*rate;
 
 let congestion=/(EC|WC|W1|SW1|SE1)/.test((collection.value+via.value+delivery.value).toUpperCase())?18:0;
 
 let total=costHours+costMiles+costStairs+congestion;
 
+let menText = men===0?"Driver only":(men===1?"1 man":men+" men");
+let stairsText = men===0?"No charge (no help requested)":`${menText} × ${stairsTotal} flights × £10`;
+
 let ref="FAM-"+Math.floor(10000+Math.random()*90000);
 
 let quote=`FAST ANY MOVES LTD
+Instant Moving Quote
+
+--------------------------------
 
 Quote Reference: ${ref}
 
-Estimated working time: ${hours}h
-Distance: ${miles.toFixed(2)} miles
+--------------------------------
+
+Estimated working time: ${hours} hours
+Total distance: ${miles.toFixed(2)} miles
 
 --------------------------------
 
@@ -209,24 +179,61 @@ TOTAL PRICE: £${total.toFixed(2)}
 
 --------------------------------
 
-Labour: £${costHours.toFixed(2)}
-Distance: £${costMiles.toFixed(2)}
-Stairs: £${costStairs.toFixed(2)}
-Congestion: £${congestion.toFixed(2)}
+COST BREAKDOWN
+
+Labour
+${hours} hours × £${rate}/hour
+= £${costHours.toFixed(2)}
+
+Distance
+${miles.toFixed(2)} miles × £1.50/mile
+= £${costMiles.toFixed(2)}
+
+Stairs
+${stairsText}
+= £${costStairs.toFixed(2)}
+
+Congestion charge
+= £${congestion.toFixed(2)}
 
 --------------------------------
 
 This quotation is based on the details provided by the customer.
 
-Any additional time will be charged in 30-minute increments.`;
+Any additional time required will be charged in 30-minute increments at the selected service rate.`;
 
 result.innerText=quote;
 bookingButtons.style.display="block";
 
-fullMessage=quote;
-quoteCalculated=true;
+/* FULL MESSAGE COMPLET */
+fullMessage=`Fast Any Moves Booking
 
-}
+Name: ${name.value}
+Phone: ${phone.value}
+Email: ${email.value}
+
+Move Date: ${moveDate.value}
+
+Van: ${van.value}
+Help: ${menText}
+
+Collection: ${collection.value}
+Collection Stairs: ${stairsCollection.value}
+
+Via: ${via.value}
+Via Stairs: ${stairsVia.value}
+
+Delivery: ${delivery.value}
+Delivery Stairs: ${stairsDelivery.value}
+
+Additional Info:
+${info.value}
+
+--------------------------------
+
+${quote}`;
+
+quoteCalculated=true;
 
 }
 
@@ -246,42 +253,6 @@ email: email.value
 whatsappBtn.onclick=function(){
 if(!quoteCalculated)return alert("Calculate quote first");
 window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
-}
-
-/* PDF */
-pdfBtn.onclick=function(){
-
-if(!quoteCalculated)return alert("Calculate quote first");
-
-const { jsPDF } = window.jspdf;
-let doc=new jsPDF();
-
-doc.setFillColor(11,77,186);
-doc.rect(0,0,210,30,"F");
-
-let img=new Image();
-img.src="logo.png";
-
-img.onload=function(){
-
-doc.addImage(img,"PNG",10,5,25,20);
-
-doc.setTextColor(255,255,255);
-doc.setFontSize(16);
-doc.text("FAST ANY MOVES LTD",105,15,null,null,"center");
-
-doc.setTextColor(0,0,0);
-
-let y=40;
-fullMessage.split("\n").forEach(line=>{
-doc.text(line,20,y);
-y+=6;
-});
-
-doc.save("quote.pdf");
-
-}
-
 }
 
 </script>
