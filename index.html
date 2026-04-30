@@ -130,6 +130,16 @@ emailjs.init("UTKviVTwg9BJjYixe");
 
 document.getElementById("moveDate").min=new Date().toISOString().slice(0,16);
 
+function formatDateUK(dateValue){
+let d=new Date(dateValue);
+let day=d.getDate();
+let month=d.toLocaleString('en-GB',{month:'short'});
+let year=d.getFullYear();
+let hours=String(d.getHours()).padStart(2,'0');
+let minutes=String(d.getMinutes()).padStart(2,'0');
+return `${day} ${month} ${year}, ${hours}:${minutes}`;
+}
+
 let quoteCalculated=false;
 let fullMessage="";
 
@@ -232,7 +242,7 @@ Name: ${document.getElementById("name").value}
 Phone: ${document.getElementById("phone").value}
 Email: ${document.getElementById("email").value}
 
-Move Date: ${document.getElementById("moveDate").value}
+Move Date: ${formatDateUK(document.getElementById("moveDate").value)}
 
 Van: ${document.getElementById("van").value}
 Help: ${menText}
@@ -257,7 +267,7 @@ if(!quoteCalculated)return alert("Calculate quote first");
 
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{
 quote_breakdown: fullMessage,
-email: document.getElementById("email").value
+email: document.getElementById("email").value.trim()
 })
 .then(()=>alert("Email sent successfully"))
 .catch(()=>alert("Email failed"));
