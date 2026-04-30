@@ -133,11 +133,6 @@ document.getElementById("moveDate").min=new Date().toISOString().slice(0,16);
 let quoteCalculated=false;
 let fullMessage="";
 
-function formatDate(dateValue){
-let d=new Date(dateValue);
-return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
-}
-
 document.getElementById("quoteForm").addEventListener("submit",function(e){
 e.preventDefault();
 calculateQuote();
@@ -231,30 +226,20 @@ Any additional time required will be charged in 30-minute increments at the sele
 document.getElementById("result").innerText=quote;
 document.getElementById("bookingButtons").style.display="block";
 
-let formattedDate=formatDate(document.getElementById("moveDate").value);
-
 fullMessage=`Fast Any Moves Booking
 
 Name: ${document.getElementById("name").value}
 Phone: ${document.getElementById("phone").value}
 Email: ${document.getElementById("email").value}
 
-Move Date: ${formattedDate}
+Move Date: ${document.getElementById("moveDate").value}
 
 Van: ${document.getElementById("van").value}
 Help: ${menText}
 
 Collection: ${collection}
-Collection Stairs: ${stairsCollection.value}
-
 Via: ${via}
-Via Stairs: ${stairsVia.value}
-
 Delivery: ${delivery}
-Delivery Stairs: ${stairsDelivery.value}
-
-Additional Info:
-${document.getElementById("info").value}
 
 --------------------------------
 
@@ -272,7 +257,7 @@ if(!quoteCalculated)return alert("Calculate quote first");
 
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{
 quote_breakdown: fullMessage,
-to_email: document.getElementById("email").value
+email: document.getElementById("email").value
 })
 .then(()=>alert("Email sent successfully"))
 .catch(()=>alert("Email failed"));
