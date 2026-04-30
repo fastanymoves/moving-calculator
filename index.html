@@ -113,23 +113,28 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 
 </div>
 
-<!-- GOOGLE -->
+<!-- GOOGLE MAPS (FIX REAL) -->
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
-window.onload=function(){
-new google.maps.places.Autocomplete(collection);
-new google.maps.places.Autocomplete(via);
-new google.maps.places.Autocomplete(delivery);
-};
+
+/* 🔥 AUTOCOMPLETE SIGUR */
+window.addEventListener("load", function(){
+if(window.google && google.maps){
+new google.maps.places.Autocomplete(document.getElementById("collection"));
+new google.maps.places.Autocomplete(document.getElementById("via"));
+new google.maps.places.Autocomplete(document.getElementById("delivery"));
+}
+});
 
 emailjs.init("UTKviVTwg9BJjYixe");
 
+/* DATE FIX */
 let now=new Date();
 now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
-moveDate.min=now.toISOString().slice(0,16);
+document.getElementById("moveDate").min=now.toISOString().slice(0,16);
 
 let quoteCalculated=false;
 let fullMessage="";
@@ -143,7 +148,7 @@ luton:[40,50,70,100]
 }[van][men];
 }
 
-quoteForm.addEventListener("submit",function(e){
+document.getElementById("quoteForm").addEventListener("submit",function(e){
 e.preventDefault();
 
 let men=parseInt(help.value);
@@ -171,12 +176,7 @@ let congestion=/(EC|WC|W1|SW1|SE1)/.test((collection.value+via.value+delivery.va
 
 let total=costHours+costMiles+costStairs+congestion;
 
-let quote=`FAST ANY MOVES LTD
-
-Estimated time: ${hours}h
-Distance: ${miles.toFixed(2)} miles
-
-TOTAL: £${total.toFixed(2)}
+let quote=`TOTAL: £${total.toFixed(2)}
 
 Labour: ${hours}h × £${rate} = £${costHours.toFixed(2)}
 Distance: ${miles.toFixed(2)} × £1.50 = £${costMiles.toFixed(2)}
@@ -188,14 +188,9 @@ bookingButtons.style.display="block";
 
 fullMessage=`Fast Any Moves Booking
 
-Name: ${name.value}
-Phone: ${phone.value}
-Email: ${email.value}
-
-Move Date: ${new Date(moveDate.value).toLocaleString('en-GB')}
-
-Van: ${van.value}
-Help: ${help.options[help.selectedIndex].text}
+Name: ${document.getElementById("name").value}
+Phone: ${document.getElementById("phone").value}
+Email: ${document.getElementById("email").value}
 
 Collection: ${collection.value}
 Via: ${via.value}
@@ -208,17 +203,18 @@ quoteCalculated=true;
 });
 });
 
-emailBtn.onclick=function(){
+document.getElementById("emailBtn").onclick=function(){
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{
 quote_breakdown: fullMessage,
-email: email.value
+email: document.getElementById("email").value
 })
 .then(()=>alert("Email sent ✔"));
 };
 
-whatsappBtn.onclick=function(){
+document.getElementById("whatsappBtn").onclick=function(){
 window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
 };
+
 </script>
 
 </body>
