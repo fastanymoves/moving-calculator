@@ -55,7 +55,7 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 <label>Help *</label>
 <select id="help" required>
 <option value="">Select</option>
-<option value="0">No help</option>
+<option value="0">No help required</option>
 <option value="1">Driver help</option>
 <option value="2">Driver + 1 helper</option>
 <option value="3">Driver + 2 helpers</option>
@@ -64,42 +64,69 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 <label>Collection Address *</label>
 <input type="text" id="collection" required>
 
+<label>Collection Stairs *</label>
+<select id="stairsCollection">
+<option value="0">Ground floor / Lift</option>
+<option value="1">1 Flight</option>
+<option value="2">2 Flights</option>
+<option value="3">3 Flights</option>
+<option value="4">4 Flights</option>
+</select>
+
 <label>Via Address</label>
 <input type="text" id="via">
+
+<label>Via Stairs</label>
+<select id="stairsVia">
+<option value="0">Ground floor / Lift</option>
+<option value="1">1 Flight</option>
+<option value="2">2 Flights</option>
+<option value="3">3 Flights</option>
+<option value="4">4 Flights</option>
+</select>
 
 <label>Delivery Address *</label>
 <input type="text" id="delivery" required>
 
-<button type="submit">Get Quote</button>
+<label>Delivery Stairs *</label>
+<select id="stairsDelivery">
+<option value="0">Ground floor / Lift</option>
+<option value="1">1 Flight</option>
+<option value="2">2 Flights</option>
+<option value="3">3 Flights</option>
+<option value="4">4 Flights</option>
+</select>
+
+<label>Additional Information</label>
+<textarea id="info"></textarea>
+
+<button type="submit" id="quoteBtn">Get My Instant Quote</button>
 
 </form>
 
 <div id="result" class="result"></div>
 
 <div id="bookingButtons" style="display:none;">
-<button id="whatsappBtn">WhatsApp</button>
-<button id="emailBtn">Email</button>
+<button id="whatsappBtn">Book via WhatsApp</button>
+<button id="emailBtn">Book via Email</button>
 </div>
 
 </div>
 
-<!-- 🔥 GOOGLE MAPS (IMPORTANT) -->
+<!-- GOOGLE -->
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
+window.onload=function(){
+new google.maps.places.Autocomplete(collection);
+new google.maps.places.Autocomplete(via);
+new google.maps.places.Autocomplete(delivery);
+};
 
 emailjs.init("UTKviVTwg9BJjYixe");
 
-/* 🔥 AUTOCOMPLETE FIX */
-window.onload = function(){
-new google.maps.places.Autocomplete(document.getElementById("collection"));
-new google.maps.places.Autocomplete(document.getElementById("via"));
-new google.maps.places.Autocomplete(document.getElementById("delivery"));
-};
-
-/* DATE FIX */
 let now=new Date();
 now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
 moveDate.min=now.toISOString().slice(0,16);
@@ -107,7 +134,6 @@ moveDate.min=now.toISOString().slice(0,16);
 let quoteCalculated=false;
 let fullMessage="";
 
-/* PREȚURI */
 function getRate(van,men){
 return {
 small:[35,40,60,90],
@@ -119,13 +145,12 @@ luton:[40,50,70,100]
 
 quoteForm.addEventListener("submit",function(e){
 e.preventDefault();
-calculateQuote();
-});
-
-function calculateQuote(){
 
 let men=parseInt(help.value);
 let rate=getRate(van.value,men);
+
+let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
+let costStairs=men===0?0:stairsTotal*10*men;
 
 new google.maps.DistanceMatrixService().getDistanceMatrix({
 origins:[collection.value],
@@ -142,12 +167,21 @@ if(hours<2)hours=2;
 let costHours=hours*rate;
 let costMiles=miles*1.5;
 
-let total=costHours+costMiles;
+let congestion=/(EC|WC|W1|SW1|SE1)/.test((collection.value+via.value+delivery.value).toUpperCase())?18:0;
 
-let quote=`TOTAL: £${total.toFixed(2)}
+let total=costHours+costMiles+costStairs+congestion;
 
-Labour: £${costHours.toFixed(2)}
-Distance: £${costMiles.toFixed(2)}`;
+let quote=`FAST ANY MOVES LTD
+
+Estimated time: ${hours}h
+Distance: ${miles.toFixed(2)} miles
+
+TOTAL: £${total.toFixed(2)}
+
+Labour: ${hours}h × £${rate} = £${costHours.toFixed(2)}
+Distance: ${miles.toFixed(2)} × £1.50 = £${costMiles.toFixed(2)}
+Stairs: £${costStairs.toFixed(2)}
+Congestion: £${congestion.toFixed(2)}`;
 
 result.innerText=quote;
 bookingButtons.style.display="block";
@@ -158,7 +192,13 @@ Name: ${name.value}
 Phone: ${phone.value}
 Email: ${email.value}
 
+Move Date: ${new Date(moveDate.value).toLocaleString('en-GB')}
+
+Van: ${van.value}
+Help: ${help.options[help.selectedIndex].text}
+
 Collection: ${collection.value}
+Via: ${via.value}
 Delivery: ${delivery.value}
 
 ${quote}`;
@@ -166,10 +206,8 @@ ${quote}`;
 quoteCalculated=true;
 
 });
+});
 
-}
-
-/* EMAIL */
 emailBtn.onclick=function(){
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{
 quote_breakdown: fullMessage,
@@ -178,11 +216,9 @@ email: email.value
 .then(()=>alert("Email sent ✔"));
 };
 
-/* WHATSAPP */
 whatsappBtn.onclick=function(){
 window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
 };
-
 </script>
 
 </body>
