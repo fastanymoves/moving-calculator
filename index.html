@@ -16,7 +16,11 @@ label{font-weight:600;display:block;margin-top:15px;}
 input,select,textarea{width:100%;padding:12px;margin-top:5px;border-radius:6px;border:1px solid #ccc;}
 button{width:100%;padding:15px;margin-top:10px;border:none;border-radius:6px;font-weight:600;cursor:pointer;}
 
-#quoteBtn{background:#0B4DBA;color:white;} /* FIX CULOARE */
+#quoteBtn{
+background:#0B4DBA;
+color:white;
+}
+
 #whatsappBtn{background:#25D366;color:white;}
 #emailBtn{background:#007bff;color:white;}
 
@@ -33,74 +37,34 @@ button{width:100%;padding:15px;margin-top:10px;border:none;border-radius:6px;fon
 
 <form id="quoteForm">
 
-<label>Name *</label>
-<input type="text" id="name" required>
-
-<label>Email *</label>
-<input type="email" id="email" required>
-
-<label>Phone *</label>
-<input type="text" id="phone" required>
-
-<label>Moving Date & Time *</label>
+<input type="text" id="name" placeholder="Name" required>
+<input type="email" id="email" placeholder="Email" required>
+<input type="text" id="phone" placeholder="Phone" required>
 <input type="datetime-local" id="moveDate" required>
 
-<label>What size of van do you need for? *</label>
 <select id="van" required>
-<option value="">Select</option>
+<option value="">Select Van</option>
 <option value="small">Small Van</option>
 <option value="medium">Medium Van</option>
 <option value="large">Large Van</option>
 <option value="luton">Luton Van</option>
 </select>
 
-<label>Do you need help with loading and unloading? *</label>
 <select id="help" required>
-<option value="">Select</option>
-<option value="0">No help required</option>
+<option value="">Select Help</option>
+<option value="0">No help</option>
 <option value="1">Driver help</option>
 <option value="2">Driver + 1 helper</option>
 <option value="3">Driver + 2 helpers</option>
 </select>
 
-<label>Collection Address *</label>
-<input type="text" id="collection" required>
+<input type="text" id="collection" placeholder="Collection Address" required>
+<select id="stairsCollection"><option value="0">Collection Stairs</option><option value="1">1</option><option value="2">2</option></select>
 
-<label>Collection Stairs *</label>
-<select id="stairsCollection" required>
-<option value="0">Ground floor / Lift</option>
-<option value="1">1 Flight</option>
-<option value="2">2 Flights</option>
-<option value="3">3 Flights</option>
-<option value="4">4 Flights</option>
-</select>
+<input type="text" id="delivery" placeholder="Delivery Address" required>
+<select id="stairsDelivery"><option value="0">Delivery Stairs</option><option value="1">1</option><option value="2">2</option></select>
 
-<label>Via Address (optional)</label>
-<input type="text" id="via">
-
-<label>Via Stairs</label>
-<select id="stairsVia">
-<option value="0">Ground floor / Lift</option>
-<option value="1">1 Flight</option>
-<option value="2">2 Flights</option>
-<option value="3">3 Flights</option>
-<option value="4">4 Flights</option>
-</select>
-
-<label>Delivery Address *</label>
-<input type="text" id="delivery" required>
-
-<label>Delivery Stairs *</label>
-<select id="stairsDelivery" required>
-<option value="0">Ground floor / Lift</option>
-<option value="1">1 Flight</option>
-<option value="2">2 Flights</option>
-<option value="3">3 Flights</option>
-<option value="4">4 Flights</option>
-</select>
-
-<label>Additional Information</label>
-<textarea id="info"></textarea>
+<textarea id="info" placeholder="Additional info"></textarea>
 
 <button type="submit" id="quoteBtn">Get My Instant Quote</button>
 
@@ -115,7 +79,6 @@ button{width:100%;padding:15px;margin-top:10px;border:none;border-radius:6px;fon
 
 </div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
@@ -143,35 +106,24 @@ luton:[40,50,70,100]
 
 let rate=rates[van.value][men];
 
-let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
+let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsDelivery.value);
 let costStairs=stairsTotal*10*men;
 
-let miles=10; // fallback simplu
+let miles=10;
 let costMiles=miles*1.5;
 
 let hours=2;
 let costHours=hours*rate;
 
-let congestion=/(EC|WC|W1|SW1|SE1)/.test((collection.value+via.value+delivery.value).toUpperCase())?18:0;
+let congestion=0;
 
 let total=costHours+costMiles+costStairs+congestion;
 
 let menText = men===0?"Driver only":(men===1?"1 man":men+" men");
-let stairsText = men===0?"No charge (no help requested)":`${menText} × ${stairsTotal} flights × £10`;
-
-let ref="FAM-"+Math.floor(10000+Math.random()*90000);
 
 let quote=`FAST ANY MOVES LTD
-Instant Moving Quote
 
---------------------------------
-
-Quote Reference: ${ref}
-
---------------------------------
-
-Estimated working time: ${hours} hours
-Total distance: ${miles.toFixed(2)} miles
+Quote Reference: FAM-${Math.floor(10000+Math.random()*90000)}
 
 --------------------------------
 
@@ -186,48 +138,25 @@ ${hours} hours × £${rate}/hour
 = £${costHours.toFixed(2)}
 
 Distance
-${miles.toFixed(2)} miles × £1.50/mile
+${miles} miles × £1.50
 = £${costMiles.toFixed(2)}
 
 Stairs
-${stairsText}
+${menText} × ${stairsTotal} flights × £10
 = £${costStairs.toFixed(2)}
-
-Congestion charge
-= £${congestion.toFixed(2)}
-
---------------------------------
-
-This quotation is based on the details provided by the customer.
-
-Any additional time required will be charged in 30-minute increments at the selected service rate.`;
+`;
 
 result.innerText=quote;
 bookingButtons.style.display="block";
 
-/* FULL MESSAGE COMPLET */
-fullMessage=`Fast Any Moves Booking
+fullMessage=`CLIENT DETAILS
 
 Name: ${name.value}
 Phone: ${phone.value}
 Email: ${email.value}
 
-Move Date: ${moveDate.value}
-
-Van: ${van.value}
-Help: ${menText}
-
 Collection: ${collection.value}
-Collection Stairs: ${stairsCollection.value}
-
-Via: ${via.value}
-Via Stairs: ${stairsVia.value}
-
 Delivery: ${delivery.value}
-Delivery Stairs: ${stairsDelivery.value}
-
-Additional Info:
-${info.value}
 
 --------------------------------
 
