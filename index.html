@@ -113,181 +113,132 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 
 </div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places&callback=initAutocomplete" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
 
+function initAutocomplete(){
+new google.maps.places.Autocomplete(document.getElementById('collection'));
+new google.maps.places.Autocomplete(document.getElementById('via'));
+new google.maps.places.Autocomplete(document.getElementById('delivery'));
+}
+
 emailjs.init("UTKviVTwg9BJjYixe");
 
-/* AUTOCOMPLETE FIX */
-window.addEventListener("load",()=>{
-const opt={componentRestrictions:{country:"uk"}};
-new google.maps.places.Autocomplete(document.getElementById("collection"),opt);
-new google.maps.places.Autocomplete(document.getElementById("via"),opt);
-new google.maps.places.Autocomplete(document.getElementById("delivery"),opt);
-});
-
-/* DATE FIX */
 let now=new Date();
 now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
-moveDate.min=now.toISOString().slice(0,16);
+document.getElementById("moveDate").min=now.toISOString().slice(0,16);
 
-/* VALIDARE + SCROLL */
-quoteForm.addEventListener("submit",function(e){
+let quoteCalculated=false;
+let fullMessage="";
+
+/* FIX PREȚURI */
+function getRate(van,men){
+const p={
+small:[35,40,60,90],
+medium:[35,40,60,90],
+large:[40,50,70,100],
+luton:[40,50,70,100]
+};
+return p[van][men];
+}
+
+document.getElementById("quoteForm").addEventListener("submit",function(e){
 e.preventDefault();
-
-let fields=["name","email","phone","moveDate","van","help","collection","delivery"];
-let firstError=null;
-
-fields.forEach(id=>{
-let el=document.getElementById(id);
-el.style.border="1px solid #ccc";
-
-if(!el.value || (id==="moveDate" && new Date(el.value)<=new Date())){
-el.style.border="2px solid red";
-if(!firstError) firstError=el;
-}
-});
-
-if(firstError){
-firstError.scrollIntoView({behavior:"smooth",block:"center"});
-return;
-}
-
 calculateQuote();
 });
 
-/* CALCUL + BREAKDOWN PRO */
 function calculateQuote(){
 
-let men=parseInt(help.value);
-let rate=[45,50,100,120][men];
+let men=parseInt(document.getElementById("help").value);
+let rate=getRate(document.getElementById("van").value,men);
 
 let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
 let costStairs=stairsTotal*10*men;
 
-let segments=via.value?
-[{origin:collection.value,destination:via.value},{origin:via.value,destination:delivery.value}]
-:[{origin:collection.value,destination:delivery.value}];
+const collection=document.getElementById("collection").value;
+const via=document.getElementById("via").value;
+const delivery=document.getElementById("delivery").value;
 
-let meters=0,seconds=0,done=0;
+const segments=via?
+[{origin:collection,destination:via},{origin:via,destination:delivery}]
+:[{origin:collection,destination:delivery}];
 
-segments.forEach(s=>{
+let totalMeters=0,totalSeconds=0,done=0;
+
+segments.forEach(seg=>{
 new google.maps.DistanceMatrixService().getDistanceMatrix({
-origins:[s.origin],
-destinations:[s.destination],
+origins:[seg.origin],
+destinations:[seg.destination],
 travelMode:"DRIVING"
-},function(r){
-
-let el=r.rows[0].elements[0];
+},function(res){
+let el=res.rows[0].elements[0];
 if(el.status!=="OK"){alert("Invalid address");return;}
-
-meters+=el.distance.value;
-seconds+=el.duration.value;
+totalMeters+=el.distance.value;
+totalSeconds+=el.duration.value;
 done++;
-
-if(done===segments.length) finish();
+if(done===segments.length) finish(totalMeters,totalSeconds);
 });
 });
 
-function finish(){
+function finish(meters,seconds){
 
 let miles=meters/1609.34;
-let hours=Math.ceil((seconds/3600)*2)/2;
+let costMiles=miles*1.5;
+
+let load=[40,30,20,15][men]*60;
+let totalTime=seconds+load+(stairsTotal*600);
+
+let hours=Math.ceil((totalTime/3600)*2)/2;
 if(hours<2)hours=2;
 
 let costHours=hours*rate;
-let costMiles=miles*1.5;
 
-let congestion=/(EC|WC|W1|SW1|SE1)/.test((collection.value+via.value+delivery.value).toUpperCase())?18:0;
+let congestion=/(EC|WC|W1|SW1|SE1)/.test((collection+via+delivery).toUpperCase())?18:0;
 
 let total=costHours+costMiles+costStairs+congestion;
 
-let quote=`FAST ANY MOVES LTD
+let quote=`TOTAL: £${total.toFixed(2)}
 
-Estimated working time: ${hours} hours
-Total distance: ${miles.toFixed(2)} miles
+Labour: £${costHours.toFixed(2)}
+Distance: £${costMiles.toFixed(2)}
+Stairs: £${costStairs.toFixed(2)}
+Congestion: £${congestion.toFixed(2)}`;
 
---------------------------------
+document.getElementById("result").innerText=quote;
+document.getElementById("bookingButtons").style.display="block";
 
-TOTAL PRICE: £${total.toFixed(2)}
-
---------------------------------
-
-COST BREAKDOWN
-
-Labour
-${hours} hours × £${rate}/hour
-= £${costHours.toFixed(2)}
-
-Distance
-${miles.toFixed(2)} miles × £1.50/mile
-= £${costMiles.toFixed(2)}
-
-Stairs
-${men===0?"No charge (no help requested)":`${men} men × ${stairsTotal} flights × £10`}
-= £${costStairs.toFixed(2)}
-
-Congestion charge
-= £${congestion.toFixed(2)}
-
---------------------------------
-
-This quotation is based on the details provided by the customer.
-
-Any additional time required will be charged in 30-minute increments.`;
-
-result.innerText=quote;
-bookingButtons.style.display="block";
-
+/* FIX NAME */
 fullMessage=`Fast Any Moves Booking
 
-Name: ${name.value}
-Phone: ${phone.value}
-Email: ${email.value}
-
-Move Date: ${new Date(moveDate.value).toLocaleString('en-GB')}
-
-Van: ${van.value}
-Help: ${help.options[help.selectedIndex].text}
-
-Collection: ${collection.value}
-Collection Stairs: ${stairsCollection.options[stairsCollection.selectedIndex].text}
-
-Via: ${via.value}
-Via Stairs: ${stairsVia.options[stairsVia.selectedIndex].text}
-
-Delivery: ${delivery.value}
-Delivery Stairs: ${stairsDelivery.options[stairsDelivery.selectedIndex].text}
-
-Additional Info:
-${info.value}
+Name: ${document.getElementById("name").value}
+Phone: ${document.getElementById("phone").value}
+Email: ${document.getElementById("email").value}
 
 ${quote}`;
 
 quoteCalculated=true;
-}
 
 }
 
-/* EMAIL */
-emailBtn.onclick=()=>{
-if(!quoteCalculated)return alert("Calculate first");
+}
 
+/* FIX EMAIL */
+document.getElementById("emailBtn").onclick=function(){
+if(!quoteCalculated){alert("Calculate quote first");return;}
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{
 quote_breakdown:fullMessage,
-email: email.value
+to_email: document.getElementById("email").value
 })
 .then(()=>alert("Email sent ✔"))
 .catch(()=>alert("Email failed ❌"));
 };
 
-/* WHATSAPP */
-whatsappBtn.onclick=()=>{
-if(!quoteCalculated)return alert("Calculate first");
+document.getElementById("whatsappBtn").onclick=function(){
+if(!quoteCalculated){alert("Calculate quote first");return;}
 window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
-};
+}
 
 </script>
 
