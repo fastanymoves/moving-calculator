@@ -2,16 +2,24 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Fast Any Moves Ltd – PRO Quote</title>
+<title>Fast Any Moves Ltd – Instant Moving Quote</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
 <style>
-body{font-family:sans-serif;background:#f4f7fb;}
-.container{max-width:800px;margin:30px auto;background:#fff;padding:25px;border-radius:10px;}
-input,select,textarea{width:100%;padding:10px;margin-top:5px;}
-button{margin-top:10px;padding:12px;width:100%;cursor:pointer;}
+body{font-family:'Poppins',sans-serif;background:#f4f7fb;margin:0;}
+.container{max-width:800px;margin:40px auto;background:white;padding:30px;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.12);}
+h1{text-align:center;color:#0B4DBA;}
+h2{text-align:center;font-weight:400;color:#555;margin-bottom:25px;}
+label{font-weight:600;display:block;margin-top:15px;}
+input,select,textarea{width:100%;padding:12px;margin-top:5px;border-radius:6px;border:1px solid #ccc;}
+button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font-weight:600;cursor:pointer;}
+#quoteBtn{background:#0B4DBA;color:white;}
+#whatsappBtn{background:#25D366;color:white;}
+#emailBtn{background:#007bff;color:white;}
 .error{color:red;font-size:13px;}
-.result{margin-top:20px;background:#eef5ff;padding:15px;}
+.result{margin-top:25px;padding:20px;background:#eef5ff;border-radius:8px;white-space:pre-line;}
 </style>
 </head>
 
@@ -19,33 +27,50 @@ button{margin-top:10px;padding:12px;width:100%;cursor:pointer;}
 
 <div class="container">
 
-<h2>Fast Any Moves – PRO Quote</h2>
+<h1>Fast Any Moves Ltd</h1>
+<h2>Instant Moving Quote – London Man & Van</h2>
 
-<form id="form">
+<form id="quoteForm">
 
-<input id="name" placeholder="Name">
+<label>Name *</label>
+<input type="text" id="name">
 <div id="err_name" class="error"></div>
 
-<input id="email" placeholder="Email">
+<label>Email *</label>
+<input type="email" id="email">
 <div id="err_email" class="error"></div>
 
-<input id="phone" placeholder="Phone">
+<label>Phone *</label>
+<input type="text" id="phone">
 <div id="err_phone" class="error"></div>
 
-<input type="datetime-local" id="date">
+<label>Moving Date & Time *</label>
+<input type="datetime-local" id="moveDate">
 <div id="err_date" class="error"></div>
 
+<label>Van *</label>
+<select id="van">
+<option value="">Select</option>
+<option value="small">Small Van</option>
+<option value="medium">Medium Van</option>
+<option value="large">Large Van</option>
+<option value="luton">Luton Van</option>
+</select>
+
+<label>Help *</label>
 <select id="help">
-<option value="">Help</option>
+<option value="">Select</option>
 <option value="0">Driver only</option>
 <option value="1">Driver help</option>
 <option value="2">Driver + 1 helper</option>
 <option value="3">Driver + 2 helpers</option>
 </select>
 
-<input id="collection" placeholder="Collection address">
+<label>Collection Address *</label>
+<input type="text" id="collection">
 <div id="err_collection" class="error"></div>
 
+<label>Collection Stairs *</label>
 <select id="stairsCollection">
 <option value="0">Ground floor / Lift</option>
 <option value="1">1 Flight</option>
@@ -54,9 +79,23 @@ button{margin-top:10px;padding:12px;width:100%;cursor:pointer;}
 <option value="4">4 Flights</option>
 </select>
 
-<input id="delivery" placeholder="Delivery address">
+<label>Via Address (optional)</label>
+<input type="text" id="via">
+
+<label>Via Stairs</label>
+<select id="stairsVia">
+<option value="0">Ground floor / Lift</option>
+<option value="1">1 Flight</option>
+<option value="2">2 Flights</option>
+<option value="3">3 Flights</option>
+<option value="4">4 Flights</option>
+</select>
+
+<label>Delivery Address *</label>
+<input type="text" id="delivery">
 <div id="err_delivery" class="error"></div>
 
+<label>Delivery Stairs *</label>
 <select id="stairsDelivery">
 <option value="0">Ground floor / Lift</option>
 <option value="1">1 Flight</option>
@@ -65,16 +104,19 @@ button{margin-top:10px;padding:12px;width:100%;cursor:pointer;}
 <option value="4">4 Flights</option>
 </select>
 
-<textarea id="info" placeholder="Additional info"></textarea>
+<label>Additional Information</label>
+<textarea id="info"></textarea>
 
-<button type="submit">Get Quote</button>
+<button type="submit" id="quoteBtn">Get My Instant Quote</button>
 
 </form>
 
 <div id="result" class="result"></div>
 
-<button id="whatsappBtn">WhatsApp</button>
-<button id="emailBtn">Email</button>
+<div id="bookingButtons" style="display:none;">
+<button id="whatsappBtn">Book via WhatsApp</button>
+<button id="emailBtn">Book via Email</button>
+</div>
 
 </div>
 
@@ -85,7 +127,7 @@ button{margin-top:10px;padding:12px;width:100%;cursor:pointer;}
 
 emailjs.init("UTKviVTwg9BJjYixe");
 
-/* ===== VALIDARE ===== */
+/* VALIDARE */
 function validate(){
 let ok=true;
 
@@ -94,94 +136,63 @@ document.getElementById("err_"+id).innerText=msg;
 if(msg) ok=false;
 }
 
-err("name",""); err("email",""); err("phone",""); err("date","");
-err("collection",""); err("delivery","");
+err("name",""); err("email",""); err("phone",""); err("date",""); err("collection",""); err("delivery","");
 
 let name=document.getElementById("name").value.trim();
 let email=document.getElementById("email").value.trim();
 let phone=document.getElementById("phone").value.trim();
-let date=document.getElementById("date").value;
-let collection=document.getElementById("collection").value.trim();
-let delivery=document.getElementById("delivery").value.trim();
+let date=document.getElementById("moveDate").value;
 
 if(name.length<2) err("name","Enter name");
 if(!email.includes("@")) err("email","Invalid email");
 if(phone.length<8) err("phone","Invalid phone");
 
-let now=new Date();
-if(!date || new Date(date)<=now) err("date","Future date required");
+if(!date || new Date(date)<=new Date()) err("date","Select future date");
 
-if(!collection) err("collection","Required");
-if(!delivery) err("delivery","Required");
+if(!collection.value) err("collection","Required");
+if(!delivery.value) err("delivery","Required");
 
 return ok;
 }
 
-/* ===== FORMAT DATE ===== */
 function formatDateUK(val){
 return new Date(val).toLocaleString('en-GB',{
-day:'numeric',month:'short',year:'numeric',
-hour:'2-digit',minute:'2-digit'
+day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'
 });
 }
 
 let fullMessage="";
-let quoteReady=false;
+let ready=false;
 
-/* ===== SUBMIT ===== */
-document.getElementById("form").addEventListener("submit",function(e){
+document.getElementById("quoteForm").addEventListener("submit",function(e){
 e.preventDefault();
 if(!validate()) return;
 calculate();
 });
 
-/* ===== GOOGLE DISTANCE ===== */
 function calculate(){
 
 let service=new google.maps.DistanceMatrixService();
 
-let collection=document.getElementById("collection").value;
-let delivery=document.getElementById("delivery").value;
-
 service.getDistanceMatrix({
-origins:[collection],
-destinations:[delivery],
+origins:[collection.value],
+destinations:[delivery.value],
 travelMode:"DRIVING"
 },function(res,status){
 
-if(status!=="OK"){
-alert("Address error");
-return;
-}
+if(status!=="OK"){alert("Address error");return;}
 
 let el=res.rows[0].elements[0];
+if(el.status!=="OK"){alert("Route error");return;}
 
-if(el.status!=="OK"){
-alert("Invalid route");
-return;
-}
+let miles=el.distance.value/1609.34;
+let hours=Math.ceil((el.duration.value/3600+1)*2)/2;
 
-/* ===== DISTANCE REAL ===== */
-let meters=el.distance.value;
-let seconds=el.duration.value;
-
-let miles=meters/1609.34;
-let hoursTravel=seconds/3600;
-
-/* ===== CALCUL ===== */
-let help=parseInt(document.getElementById("help").value);
+let help=parseInt(helpSelect.value);
 let rate=[45,50,100,120][help];
 
-let stairsTotal=
-parseInt(stairsCollection.value)+
-parseInt(stairsDelivery.value);
-
-let costStairs=stairsTotal*10*help;
-
-let hours=Math.ceil((hoursTravel+1)*2)/2;
-if(hours<2) hours=2;
-
-let cost=hours*rate + miles*1.5 + costStairs;
+let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsDelivery.value);
+let cost=hours*rate + miles*1.5 + stairsTotal*10*help;
 
 let menText=help===0?"Driver only":help===1?"1 man":help+" men";
 
@@ -190,46 +201,38 @@ let quote=`TOTAL: £${cost.toFixed(2)}
 Distance: ${miles.toFixed(2)} miles
 Time: ${hours} hours`;
 
-document.getElementById("result").innerText=quote;
+result.innerText=quote;
+bookingButtons.style.display="block";
 
-/* ===== MESSAGE ===== */
 fullMessage=`Fast Any Moves Booking
 
 Name: ${document.getElementById("name").value}
 Phone: ${document.getElementById("phone").value}
 Email: ${document.getElementById("email").value}
 
-Move Date: ${formatDateUK(document.getElementById("date").value)}
+Move Date: ${formatDateUK(moveDate.value)}
 
 Help: ${menText}
 
-Collection: ${collection}
+Collection: ${collection.value}
 Collection Stairs: ${stairsCollection.options[stairsCollection.selectedIndex].text}
 
-Delivery: ${delivery}
+Delivery: ${delivery.value}
 Delivery Stairs: ${stairsDelivery.options[stairsDelivery.selectedIndex].text}
 
 ${quote}`;
 
-quoteReady=true;
+ready=true;
 
 });
-
 }
 
-/* ===== EMAIL ===== */
 emailBtn.onclick=function(){
-if(!quoteReady)return alert("Generate quote first");
-
-emailjs.send("service_1e9jyk9","template_0tbv6y9",{
-quote_breakdown: fullMessage,
-email: document.getElementById("email").value
-}).then(()=>alert("Email sent"));
+if(!ready)return;
+emailjs.send("service_1e9jyk9","template_0tbv6y9",{quote_breakdown:fullMessage,email:email.value});
 }
 
-/* ===== WHATSAPP ===== */
 whatsappBtn.onclick=function(){
-if(!quoteReady)return;
 window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
 }
 
