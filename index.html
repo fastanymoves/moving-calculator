@@ -13,14 +13,25 @@ body{font-family:'Poppins',sans-serif;background:#f4f7fb;margin:0;}
 h1{text-align:center;color:#0B4DBA;}
 h2{text-align:center;font-weight:400;color:#555;margin-bottom:25px;}
 label{font-weight:600;display:block;margin-top:15px;}
-input,select,textarea{width:100%;padding:12px;margin-top:5px;border-radius:6px;border:1px solid #ccc;}
+input,select,textarea{
+width:100%;
+padding:12px;
+margin-top:5px;
+border-radius:6px;
+border:1px solid #ccc;
+
+/* 🔥 elimină stil mobil */
+appearance:none;
+-webkit-appearance:none;
+}
+
 button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font-weight:600;cursor:pointer;}
 #quoteBtn{background:#0B4DBA;color:white;}
 #whatsappBtn{background:#25D366;color:white;}
 #emailBtn{background:#007bff;color:white;}
+
 .result{margin-top:25px;padding:20px;background:#eef5ff;border-radius:8px;white-space:pre-line;}
 
-/* 🔥 ERROR MESSAGE */
 .error-text{
 color:red;
 font-size:13px;
@@ -28,9 +39,15 @@ margin-top:5px;
 display:none;
 }
 
-/* 🔥 FORCE INVALID STYLE */
+/* 🔥 forțare invalid */
 input.invalid{
 border:2px solid red !important;
+box-shadow:0 0 0 2px rgba(255,0,0,0.2);
+}
+
+input:focus:invalid{
+outline:none;
+box-shadow:0 0 0 2px red;
 }
 </style>
 </head>
@@ -161,28 +178,34 @@ luton:[40,50,70,100]
 }[van][men];
 }
 
-/* 🔥 VALIDARE COMPLETĂ */
+/* 🔥 VALIDARE CU SCROLL REAL */
 function validateAndScroll(){
 
 let fields=["name","email","phone","moveDate","van","help","collection","delivery"];
 let firstError=null;
 
+document.getElementById("dateError").style.display="none";
+
 fields.forEach(id=>{
 let el=document.getElementById(id);
 el.classList.remove("invalid");
 
-/* RESET ERROR TEXT */
-document.getElementById("dateError").style.display="none";
-
 /* VALIDARE DATĂ */
 if(id==="moveDate"){
-let selected=new Date(el.value);
-let now=new Date();
 
-if(!el.value || selected < now){
+if(!el.value){
 el.classList.add("invalid");
 document.getElementById("dateError").style.display="block";
+if(!firstError) firstError=el;
+return;
+}
 
+let selected = new Date(el.value);
+let now = new Date();
+
+if(selected.getTime() <= now.getTime()){
+el.classList.add("invalid");
+document.getElementById("dateError").style.display="block";
 if(!firstError) firstError=el;
 return;
 }
@@ -196,8 +219,18 @@ firstError=el;
 });
 
 if(firstError){
-firstError.scrollIntoView({behavior:"smooth",block:"center"});
+
+const y = firstError.getBoundingClientRect().top + window.pageYOffset - 120;
+
+window.scrollTo({
+top: y,
+behavior: "smooth"
+});
+
+setTimeout(()=>{
 firstError.focus();
+},400);
+
 return false;
 }
 
