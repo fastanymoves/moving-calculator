@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Fast Any Moves Ltd – Instant Moving Quote</title>
+<title>Fast Any Moves Ltd – FULL PRO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -10,16 +10,14 @@
 <style>
 body{font-family:'Poppins',sans-serif;background:#f4f7fb;margin:0;}
 .container{max-width:800px;margin:40px auto;background:white;padding:30px;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.12);}
-h1{text-align:center;color:#0B4DBA;}
-h2{text-align:center;font-weight:400;color:#555;margin-bottom:25px;}
 label{font-weight:600;display:block;margin-top:15px;}
 input,select,textarea{width:100%;padding:12px;margin-top:5px;border-radius:6px;border:1px solid #ccc;}
-button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font-weight:600;cursor:pointer;}
+button{width:100%;padding:15px;margin-top:10px;border:none;border-radius:6px;cursor:pointer;font-weight:600;}
 #quoteBtn{background:#0B4DBA;color:white;}
 #whatsappBtn{background:#25D366;color:white;}
 #emailBtn{background:#007bff;color:white;}
 .error{color:red;font-size:13px;}
-.result{margin-top:25px;padding:20px;background:#eef5ff;border-radius:8px;white-space:pre-line;}
+.result{margin-top:20px;background:#eef5ff;padding:15px;border-radius:8px;white-space:pre-line;}
 </style>
 </head>
 
@@ -27,107 +25,81 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 
 <div class="container">
 
-<h1>Fast Any Moves Ltd</h1>
-<h2>Instant Moving Quote – London Man & Van</h2>
+<h2>Fast Any Moves Ltd – FULL PRO Quote</h2>
 
-<form id="quoteForm">
+<form id="form">
 
-<label>Name *</label>
-<input type="text" id="name">
+<input id="name" placeholder="Name">
 <div id="err_name" class="error"></div>
 
-<label>Email *</label>
-<input type="email" id="email">
+<input id="email" placeholder="Email">
 <div id="err_email" class="error"></div>
 
-<label>Phone *</label>
-<input type="text" id="phone">
+<input id="phone" placeholder="Phone">
 <div id="err_phone" class="error"></div>
 
-<label>Moving Date & Time *</label>
-<input type="datetime-local" id="moveDate">
+<input type="datetime-local" id="date">
 <div id="err_date" class="error"></div>
 
-<label>Van *</label>
 <select id="van">
-<option value="">Select</option>
-<option value="small">Small Van</option>
-<option value="medium">Medium Van</option>
-<option value="large">Large Van</option>
-<option value="luton">Luton Van</option>
+<option value="">Select Van</option>
+<option value="small">Small</option>
+<option value="medium">Medium</option>
+<option value="large">Large</option>
+<option value="luton">Luton</option>
 </select>
 
-<label>Help *</label>
 <select id="help">
-<option value="">Select</option>
+<option value="">Select Help</option>
 <option value="0">Driver only</option>
-<option value="1">Driver help</option>
-<option value="2">Driver + 1 helper</option>
-<option value="3">Driver + 2 helpers</option>
+<option value="1">1 man</option>
+<option value="2">2 men</option>
+<option value="3">3 men</option>
 </select>
 
-<label>Collection Address *</label>
-<input type="text" id="collection">
+<input id="collection" placeholder="Collection address">
 <div id="err_collection" class="error"></div>
 
-<label>Collection Stairs *</label>
 <select id="stairsCollection">
-<option value="0">Ground floor / Lift</option>
+<option value="0">Ground / Lift</option>
 <option value="1">1 Flight</option>
 <option value="2">2 Flights</option>
 <option value="3">3 Flights</option>
 <option value="4">4 Flights</option>
 </select>
 
-<label>Via Address (optional)</label>
-<input type="text" id="via">
-
-<label>Via Stairs</label>
-<select id="stairsVia">
-<option value="0">Ground floor / Lift</option>
-<option value="1">1 Flight</option>
-<option value="2">2 Flights</option>
-<option value="3">3 Flights</option>
-<option value="4">4 Flights</option>
-</select>
-
-<label>Delivery Address *</label>
-<input type="text" id="delivery">
+<input id="delivery" placeholder="Delivery address">
 <div id="err_delivery" class="error"></div>
 
-<label>Delivery Stairs *</label>
 <select id="stairsDelivery">
-<option value="0">Ground floor / Lift</option>
+<option value="0">Ground / Lift</option>
 <option value="1">1 Flight</option>
 <option value="2">2 Flights</option>
 <option value="3">3 Flights</option>
 <option value="4">4 Flights</option>
 </select>
 
-<label>Additional Information</label>
-<textarea id="info"></textarea>
+<textarea id="info" placeholder="Additional info"></textarea>
 
-<button type="submit" id="quoteBtn">Get My Instant Quote</button>
+<button id="quoteBtn">Get Quote</button>
 
 </form>
 
 <div id="result" class="result"></div>
 
-<div id="bookingButtons" style="display:none;">
-<button id="whatsappBtn">Book via WhatsApp</button>
-<button id="emailBtn">Book via Email</button>
-</div>
+<button id="whatsappBtn">WhatsApp</button>
+<button id="emailBtn">Email</button>
 
 </div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac"></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
 
 emailjs.init("UTKviVTwg9BJjYixe");
 
-/* VALIDARE */
+/* ===== VALIDARE ===== */
 function validate(){
 let ok=true;
 
@@ -138,16 +110,16 @@ if(msg) ok=false;
 
 err("name",""); err("email",""); err("phone",""); err("date",""); err("collection",""); err("delivery","");
 
-let name=document.getElementById("name").value.trim();
-let email=document.getElementById("email").value.trim();
-let phone=document.getElementById("phone").value.trim();
-let date=document.getElementById("moveDate").value;
+let name=nameInput.value.trim();
+let email=emailInput.value.trim();
+let phone=phoneInput.value.trim();
+let date=dateInput.value;
 
 if(name.length<2) err("name","Enter name");
 if(!email.includes("@")) err("email","Invalid email");
 if(phone.length<8) err("phone","Invalid phone");
 
-if(!date || new Date(date)<=new Date()) err("date","Select future date");
+if(!date || new Date(date)<=new Date()) err("date","Future date required");
 
 if(!collection.value) err("collection","Required");
 if(!delivery.value) err("delivery","Required");
@@ -155,22 +127,23 @@ if(!delivery.value) err("delivery","Required");
 return ok;
 }
 
-function formatDateUK(val){
-return new Date(val).toLocaleString('en-GB',{
-day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'
-});
+/* ===== PRICING ===== */
+function getRate(van,men){
+const table={
+small:[45,65,85,105],
+medium:[55,75,95,115],
+large:[65,85,100,120],
+luton:[75,95,110,130]
+};
+return table[van][men];
 }
 
-let fullMessage="";
-let ready=false;
+/* ===== MAIN ===== */
+let fullMessage="",ready=false;
 
-document.getElementById("quoteForm").addEventListener("submit",function(e){
+form.addEventListener("submit",function(e){
 e.preventDefault();
 if(!validate()) return;
-calculate();
-});
-
-function calculate(){
 
 let service=new google.maps.DistanceMatrixService();
 
@@ -180,58 +153,79 @@ destinations:[delivery.value],
 travelMode:"DRIVING"
 },function(res,status){
 
-if(status!=="OK"){alert("Address error");return;}
+if(status!=="OK") return alert("Address error");
 
 let el=res.rows[0].elements[0];
-if(el.status!=="OK"){alert("Route error");return;}
+if(el.status!=="OK") return alert("Route error");
 
 let miles=el.distance.value/1609.34;
-let hours=Math.ceil((el.duration.value/3600+1)*2)/2;
+let baseHours=el.duration.value/3600;
 
-let help=parseInt(helpSelect.value);
-let rate=[45,50,100,120][help];
+/* TIME + BUFFER */
+let hours=Math.ceil((baseHours+1)*2)/2;
+if(hours<2) hours=2;
 
+/* PRICING */
+let men=parseInt(help.value);
+let rate=getRate(van.value,men);
+
+/* RUSH HOUR */
+let h=new Date(date.value).getHours();
+if(h>=8 && h<=10 || h>=16 && h<=18){
+rate+=10;
+}
+
+/* STAIRS */
 let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsDelivery.value);
-let cost=hours*rate + miles*1.5 + stairsTotal*10*help;
+let costStairs=stairsTotal*10*men;
 
-let menText=help===0?"Driver only":help===1?"1 man":help+" men";
+/* CONGESTION */
+let congestion=/(EC|WC|W1|SW1|SE1)/.test((collection.value+delivery.value).toUpperCase())?18:0;
 
-let quote=`TOTAL: £${cost.toFixed(2)}
+let total=hours*rate + miles*1.5 + costStairs + congestion;
+
+let quote=`TOTAL: £${total.toFixed(2)}
 
 Distance: ${miles.toFixed(2)} miles
-Time: ${hours} hours`;
+Time: ${hours}h
+Rate: £${rate}/h
+Congestion: £${congestion}`;
 
+/* OUTPUT */
 result.innerText=quote;
-bookingButtons.style.display="block";
 
+/* MESSAGE */
 fullMessage=`Fast Any Moves Booking
 
-Name: ${document.getElementById("name").value}
-Phone: ${document.getElementById("phone").value}
-Email: ${document.getElementById("email").value}
+Name: ${name.value}
+Phone: ${phone.value}
+Email: ${email.value}
 
-Move Date: ${formatDateUK(moveDate.value)}
+Date: ${new Date(date.value).toLocaleString('en-GB')}
 
-Help: ${menText}
+Van: ${van.value}
+Men: ${men}
 
 Collection: ${collection.value}
-Collection Stairs: ${stairsCollection.options[stairsCollection.selectedIndex].text}
+Stairs: ${stairsCollection.options[stairsCollection.selectedIndex].text}
 
 Delivery: ${delivery.value}
-Delivery Stairs: ${stairsDelivery.options[stairsDelivery.selectedIndex].text}
+Stairs: ${stairsDelivery.options[stairsDelivery.selectedIndex].text}
 
 ${quote}`;
 
 ready=true;
 
 });
-}
+});
 
+/* EMAIL */
 emailBtn.onclick=function(){
 if(!ready)return;
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{quote_breakdown:fullMessage,email:email.value});
 }
 
+/* WHATSAPP */
 whatsappBtn.onclick=function(){
 window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
 }
