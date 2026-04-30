@@ -19,12 +19,6 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 #whatsappBtn{background:#25D366;color:white;}
 #emailBtn{background:#007bff;color:white;}
 .result{margin-top:25px;padding:20px;background:#eef5ff;border-radius:8px;white-space:pre-line;}
-
-/* 🔥 FIX VIZUAL MOBIL */
-input.error, select.error {
-border:2px solid red !important;
-background:#ffe6e6 !important;
-}
 </style>
 </head>
 
@@ -153,7 +147,7 @@ luton:[40,50,70,100]
 }[van][men];
 }
 
-/* 🔥 FIX DOAR AICI */
+/* 🔥 SINGURA MODIFICARE */
 function validateAndScroll(){
 let fields=["name","email","phone","moveDate","van","help","collection","delivery"];
 let firstError=null;
@@ -161,28 +155,16 @@ let firstError=null;
 fields.forEach(id=>{
 let el=document.getElementById(id);
 el.style.border="1px solid #ccc";
-el.classList.remove("error");
 
 if(!el.value && !firstError){
 el.style.border="2px solid red";
-el.classList.add("error"); // 🔥 vizibil mobil
 firstError=el;
 }
 });
 
 if(firstError){
-
-let y = firstError.getBoundingClientRect().top + window.scrollY - 120;
-
-window.scrollTo({
-top: y,
-behavior: "smooth"
-});
-
-setTimeout(()=>{
+firstError.scrollIntoView({behavior:"smooth",block:"center"});
 firstError.focus();
-},300);
-
 return false;
 }
 
@@ -194,9 +176,10 @@ let fullMessage="";
 document.getElementById("quoteForm").addEventListener("submit",function(e){
 e.preventDefault();
 
+/* 🔥 AICI SE FOLOSEȘTE */
 if(!validateAndScroll()) return;
 
-/* RESTUL CODULUI TĂU RĂMÂNE IDENTIC */
+/* RESTUL CODULUI RĂMÂNE IDENTIC */
 
 let nameValue=document.getElementById("name").value.trim();
 if(!nameValue) nameValue="N/A";
@@ -286,7 +269,11 @@ document.getElementById("bookingButtons").style.display="block";
 });
 
 document.getElementById("emailBtn").onclick=function(){
-emailjs.send("service_1e9jyk9","template_0tbv6y9",{quote_breakdown:fullMessage});
+emailjs.send("service_1e9jyk9","template_0tbv6y9",{
+quote_breakdown: fullMessage,
+email: document.getElementById("email").value
+})
+.then(()=>alert("Email sent ✔"));
 };
 
 document.getElementById("whatsappBtn").onclick=function(){
