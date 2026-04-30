@@ -147,24 +147,29 @@ luton:[40,50,70,100]
 }[van][men];
 }
 
-/* 🔥 SINGURA MODIFICARE */
+/* 🔥 VALIDARE FIXATĂ (mobil + desktop) */
 function validateAndScroll(){
 let fields=["name","email","phone","moveDate","van","help","collection","delivery"];
 let firstError=null;
 
 fields.forEach(id=>{
 let el=document.getElementById(id);
+
 el.style.border="1px solid #ccc";
+el.style.backgroundColor="";
+el.style.boxShadow="none";
 
 if(!el.value && !firstError){
 el.style.border="2px solid red";
+el.style.backgroundColor="#ffe6e6";
+el.style.boxShadow="0 0 0 2px red";
 firstError=el;
 }
 });
 
 if(firstError){
 firstError.scrollIntoView({behavior:"smooth",block:"center"});
-firstError.focus();
+setTimeout(()=>{firstError.focus();},300);
 return false;
 }
 
@@ -176,10 +181,7 @@ let fullMessage="";
 document.getElementById("quoteForm").addEventListener("submit",function(e){
 e.preventDefault();
 
-/* 🔥 AICI SE FOLOSEȘTE */
 if(!validateAndScroll()) return;
-
-/* RESTUL CODULUI RĂMÂNE IDENTIC */
 
 let nameValue=document.getElementById("name").value.trim();
 if(!nameValue) nameValue="N/A";
