@@ -113,35 +113,19 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 
 </div>
 
-<script>
-function initAutocomplete(){
-
-const options={
-types:["geocode"],
-componentRestrictions:{country:"uk"}
-};
-
-try{
-new google.maps.places.Autocomplete(document.getElementById('collection'),options);
-new google.maps.places.Autocomplete(document.getElementById('via'),options);
-new google.maps.places.Autocomplete(document.getElementById('delivery'),options);
-}catch(e){
-console.log("Autocomplete error:",e);
-}
-
-}
-</script>
-
-<!-- 🔴 PUNE API KEY TAU -->
-<script src="https://maps.googleapis.com/maps/api/js?key=API_KEY_TAU&libraries=places&callback=initAutocomplete" async defer></script>
-
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
-
 emailjs.init("UTKviVTwg9BJjYixe");
 
-function getRate(van, men){
+/* DATE FIX */
+let now=new Date();
+now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+moveDate.min=now.toISOString().slice(0,16);
+
+/* RATE */
+function getRate(van,men){
 const pricing={
 small:[35,40,60,90],
 medium:[35,40,60,90],
@@ -151,53 +135,85 @@ luton:[40,50,70,100]
 return pricing[van][men];
 }
 
-let quoteCalculated=false;
-let fullMessage="";
-
+/* VALIDARE */
 quoteForm.addEventListener("submit",function(e){
 e.preventDefault();
 
 let fields=[name,email,phone,moveDate,van,help,collection,delivery];
-let firstError=null;
+let first=null;
 
 fields.forEach(el=>{
 el.style.border="1px solid #ccc";
 if(!el.value || (el.id==="moveDate" && new Date(el.value)<=new Date())){
 el.style.border="2px solid red";
-if(!firstError) firstError=el;
+if(!first) first=el;
 }
 });
 
-if(firstError){
-firstError.scrollIntoView({behavior:"smooth",block:"center"});
-firstError.focus();
+if(first){
+first.scrollIntoView({behavior:"smooth",block:"center"});
+first.focus();
 return;
 }
 
-calculate();
+calculateQuote();
 });
 
-function calculate(){
+/* CALCUL REAL */
+function calculateQuote(){
 
 let men=parseInt(help.value);
 let rate=getRate(van.value,men);
 
-let miles=10;
-let hours=2;
+const service=new google.maps.DistanceMatrixService();
+
+const origins=[collection.value];
+const destinations=[delivery.value];
+
+service.getDistanceMatrix({
+origins,
+destinations,
+travelMode:"DRIVING"
+},function(res){
+
+let el=res.rows[0].elements[0];
+
+if(el.status!=="OK"){
+alert("Invalid address");
+return;
+}
+
+let meters=el.distance.value;
+let seconds=el.duration.value;
+
+let miles=meters/1609.34;
+let costMiles=miles*1.5;
+
+let load=[40,30,20,15][men]*60;
+let hours=Math.ceil(((seconds+load)/3600)*2)/2;
+if(hours<2)hours=2;
 
 let costHours=hours*rate;
-let costMiles=miles*1.5;
+
 let total=costHours+costMiles;
 
-let quote=`TOTAL PRICE: £${total.toFixed(2)}
+let quote=`FAST ANY MOVES LTD
+
+Estimated time: ${hours}h
+Distance: ${miles.toFixed(2)} miles
+
+TOTAL: £${total.toFixed(2)}
 
 Labour: £${costHours.toFixed(2)}
-Distance: £${costMiles.toFixed(2)}`;
+Distance: £${costMiles.toFixed(2)}
+
+This quotation is based on the details provided.
+Extra time charged every 30 minutes.`;
 
 result.innerText=quote;
 bookingButtons.style.display="block";
 
-fullMessage=`Fast Any Moves Booking
+window.fullMessage=`Fast Any Moves Booking
 
 Name: ${name.value}
 Phone: ${phone.value}
@@ -205,44 +221,23 @@ Email: ${email.value}
 
 Move Date: ${new Date(moveDate.value).toLocaleString('en-GB')}
 
-Van: ${van.value}
-Help: ${help.options[help.selectedIndex].text}
-
-Collection: ${collection.value}
-Collection Stairs: ${stairsCollection.options[stairsCollection.selectedIndex].text}
-
-Via: ${via.value}
-Via Stairs: ${stairsVia.options[stairsVia.selectedIndex].text}
-
-Delivery: ${delivery.value}
-Delivery Stairs: ${stairsDelivery.options[stairsDelivery.selectedIndex].text}
-
-Additional Info:
-${info.value}
-
 ${quote}`;
-
-quoteCalculated=true;
+});
 }
 
 /* EMAIL */
 emailBtn.onclick=function(){
-if(!quoteCalculated)return alert("Calculate first");
-
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{
 quote_breakdown: fullMessage,
 email: email.value
 })
-.then(()=>alert("Email sent ✔"))
-.catch(()=>alert("Email failed ❌"));
+.then(()=>alert("Email sent ✔"));
 };
 
 /* WHATSAPP */
 whatsappBtn.onclick=function(){
-if(!quoteCalculated)return alert("Calculate first");
 window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
 };
-
 </script>
 
 </body>
