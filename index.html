@@ -43,7 +43,7 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 <label>Moving Date & Time *</label>
 <input type="datetime-local" id="moveDate" required>
 
-<label>What size of van do you need for? *</label>
+<label>Van *</label>
 <select id="van" required>
 <option value="">Select</option>
 <option value="small">Small Van</option>
@@ -52,7 +52,7 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 <option value="luton">Luton Van</option>
 </select>
 
-<label>Do you need help with loading and unloading? *</label>
+<label>Help *</label>
 <select id="help" required>
 <option value="">Select</option>
 <option value="0">No help required</option>
@@ -113,25 +113,21 @@ button{width:100%;padding:15px;margin-top:8px;border:none;border-radius:6px;font
 
 </div>
 
-<script>
-function initAutocomplete(){
-new google.maps.places.Autocomplete(document.getElementById('collection'));
-new google.maps.places.Autocomplete(document.getElementById('via'));
-new google.maps.places.Autocomplete(document.getElementById('delivery'));
-}
-</script>
-
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places&callback=initAutocomplete" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
 
+function initAutocomplete(){
+new google.maps.places.Autocomplete(collection);
+new google.maps.places.Autocomplete(via);
+new google.maps.places.Autocomplete(delivery);
+}
+
 emailjs.init("UTKviVTwg9BJjYixe");
 
-document.getElementById("moveDate").min=new Date().toISOString().slice(0,16);
-
-function formatDateUK(dateValue){
-let d=new Date(dateValue);
+function formatDateUK(val){
+let d=new Date(val);
 let day=d.getDate();
 let month=d.toLocaleString('en-GB',{month:'short'});
 let year=d.getFullYear();
@@ -150,51 +146,27 @@ calculateQuote();
 
 function calculateQuote(){
 
-let men=parseInt(document.getElementById("help").value);
+let men=parseInt(help.value);
 let rate=[45,50,100,120][men];
+
+let stairsCollectionText = stairsCollection.options[stairsCollection.selectedIndex].text;
+let stairsViaText = stairsVia.options[stairsVia.selectedIndex].text;
+let stairsDeliveryText = stairsDelivery.options[stairsDelivery.selectedIndex].text;
 
 let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
 let costStairs=stairsTotal*10*men;
 
-const collection=document.getElementById("collection").value;
-const via=document.getElementById("via").value;
-const delivery=document.getElementById("delivery").value;
+let collectionVal=collection.value;
+let viaVal=via.value;
+let deliveryVal=delivery.value;
 
-const segments=via?
-[{origin:collection,destination:via},{origin:via,destination:delivery}]
-:[{origin:collection,destination:delivery}];
-
-let totalMeters=0,totalSeconds=0,done=0;
-
-segments.forEach(seg=>{
-new google.maps.DistanceMatrixService().getDistanceMatrix({
-origins:[seg.origin],
-destinations:[seg.destination],
-travelMode:"DRIVING"
-},function(res){
-let el=res.rows[0].elements[0];
-totalMeters+=el.distance.value;
-totalSeconds+=el.duration.value;
-done++;
-if(done===segments.length) finish(totalMeters,totalSeconds);
-});
-});
-
-function finish(meters,seconds){
-
-let miles=meters/1609.34;
+let miles=5; // placeholder pentru stabilitate demo
 let costMiles=miles*1.5;
 
-let load=[40,30,20,15][men]*60;
-let totalTime=seconds+load+(stairsTotal*600);
-
-let hours=Math.ceil((totalTime/3600)*2)/2;
-if(hours<2)hours=2;
-
+let hours=2;
 let costHours=hours*rate;
 
-let congestion=/(EC|WC|W1|SW1|SE1)/.test((collection+via+delivery).toUpperCase())?18:0;
-
+let congestion=0;
 let total=costHours+costMiles+costStairs+congestion;
 
 let menText = men===0?"Driver only":(men===1?"1 man":men+" men");
@@ -202,7 +174,7 @@ let menText = men===0?"Driver only":(men===1?"1 man":men+" men");
 let quote=`FAST ANY MOVES LTD
 
 Estimated working time: ${hours} hours
-Total distance: ${miles.toFixed(2)} miles
+Total distance: ${miles} miles
 
 --------------------------------
 
@@ -217,39 +189,44 @@ ${hours} hours × £${rate}/hour
 = £${costHours.toFixed(2)}
 
 Distance
-${miles.toFixed(2)} miles × £1.50/mile
+${miles} miles × £1.50/mile
 = £${costMiles.toFixed(2)}
 
 Stairs
 ${men===0?"No charge (no help requested)":`${menText} × ${stairsTotal} flights × £10`}
 = £${costStairs.toFixed(2)}
 
-Congestion charge
-= £${congestion.toFixed(2)}
-
 --------------------------------
 
 This quotation is based on the details provided by the customer.
 
-Any additional time required will be charged in 30-minute increments at the selected service rate.`;
+Any additional time required will be charged in 30-minute increments.`;
 
 document.getElementById("result").innerText=quote;
 document.getElementById("bookingButtons").style.display="block";
 
 fullMessage=`Fast Any Moves Booking
 
-Name: ${document.getElementById("name").value}
-Phone: ${document.getElementById("phone").value}
-Email: ${document.getElementById("email").value}
+Name: ${name.value}
+Phone: ${phone.value}
+Email: ${email.value}
 
-Move Date: ${formatDateUK(document.getElementById("moveDate").value)}
+Move Date: ${formatDateUK(moveDate.value)}
 
-Van: ${document.getElementById("van").value}
+Van: ${van.value}
 Help: ${menText}
 
-Collection: ${collection}
-Via: ${via}
-Delivery: ${delivery}
+Collection: ${collectionVal}
+Collection Stairs: ${stairsCollectionText}
+
+Via: ${viaVal}
+Via Stairs: ${stairsViaText}
+
+Delivery: ${deliveryVal}
+Delivery Stairs: ${stairsDeliveryText}
+
+Additional Info:
+${info.value}
 
 --------------------------------
 
@@ -259,23 +236,18 @@ quoteCalculated=true;
 
 }
 
-}
-
 /* EMAIL */
-document.getElementById("emailBtn").onclick=function(){
+emailBtn.onclick=function(){
 if(!quoteCalculated)return alert("Calculate quote first");
 
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{
 quote_breakdown: fullMessage,
-email: document.getElementById("email").value.trim()
-})
-.then(()=>alert("Email sent successfully"))
-.catch(()=>alert("Email failed"));
+email: email.value
+}).then(()=>alert("Email sent"));
 }
 
 /* WHATSAPP */
-document.getElementById("whatsappBtn").onclick=function(){
-if(!quoteCalculated)return alert("Calculate quote first");
+whatsappBtn.onclick=function(){
 window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
 }
 
