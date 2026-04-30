@@ -133,6 +133,11 @@ let d=new Date(value);
 return d.toLocaleString("en-GB",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
 }
 
+/* SET MIN DATE */
+let now=new Date();
+now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+document.getElementById("moveDate").min=now.toISOString().slice(0,16);
+
 function getRate(van,men){
 return {
 small:[35,40,60,90],
@@ -147,7 +152,19 @@ let fullMessage="";
 document.getElementById("quoteForm").addEventListener("submit",function(e){
 e.preventDefault();
 
-let name=document.getElementById("name").value;
+/* 🔥 VALIDARE DATA (FIX REAL) */
+let selectedDate = new Date(document.getElementById("moveDate").value);
+let nowCheck = new Date();
+
+if(selectedDate < nowCheck){
+alert("Please select a future date and time");
+return;
+}
+
+/* 🔥 NAME FIX */
+let nameValue=document.getElementById("name").value.trim();
+if(!nameValue) nameValue="N/A";
+
 let phone=document.getElementById("phone").value;
 let email=document.getElementById("email").value;
 
@@ -202,7 +219,7 @@ Any additional time will be charged in 30-minute increments.`;
 /* FULL MESSAGE */
 fullMessage=`Fast Any Moves Booking
 
-Name: ${name}
+Name: ${nameValue}
 Phone: ${phone}
 Email: ${email}
 
@@ -233,7 +250,6 @@ document.getElementById("bookingButtons").style.display="block";
 });
 });
 
-/* EMAIL */
 document.getElementById("emailBtn").onclick=function(){
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{
 quote_breakdown: fullMessage,
@@ -242,7 +258,6 @@ email: document.getElementById("email").value
 .then(()=>alert("Email sent ✔"));
 };
 
-/* WHATSAPP */
 document.getElementById("whatsappBtn").onclick=function(){
 window.open("https://wa.me/447846769519?text="+encodeURIComponent(fullMessage));
 };
