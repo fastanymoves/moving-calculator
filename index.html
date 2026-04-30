@@ -12,19 +12,12 @@ body{font-family:'Poppins',sans-serif;background:#f4f7fb;margin:0;}
 .container{max-width:800px;margin:40px auto;background:white;padding:30px;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.12);}
 h1{text-align:center;color:#0B4DBA;}
 h2{text-align:center;font-weight:400;color:#555;margin-bottom:25px;}
-label{font-weight:600;display:block;margin-top:15px;}
-input,select,textarea{width:100%;padding:12px;margin-top:5px;border-radius:6px;border:1px solid #ccc;}
+input,select,textarea{width:100%;padding:12px;margin-top:10px;border-radius:6px;border:1px solid #ccc;}
 button{width:100%;padding:15px;margin-top:10px;border:none;border-radius:6px;font-weight:600;cursor:pointer;}
-
-#quoteBtn{
-background:#0B4DBA;
-color:white;
-}
-
+#quoteBtn{background:#0B4DBA;color:white;}
 #whatsappBtn{background:#25D366;color:white;}
 #emailBtn{background:#007bff;color:white;}
-
-.result{margin-top:25px;padding:20px;background:#eef5ff;border-radius:8px;white-space:pre-line;}
+.result{margin-top:20px;padding:20px;background:#eef5ff;border-radius:8px;white-space:pre-line;}
 </style>
 </head>
 
@@ -61,6 +54,9 @@ color:white;
 <input type="text" id="collection" placeholder="Collection Address" required>
 <select id="stairsCollection"><option value="0">Collection Stairs</option><option value="1">1</option><option value="2">2</option></select>
 
+<input type="text" id="via" placeholder="Via (optional)">
+<select id="stairsVia"><option value="0">Via Stairs</option><option value="1">1</option><option value="2">2</option></select>
+
 <input type="text" id="delivery" placeholder="Delivery Address" required>
 <select id="stairsDelivery"><option value="0">Delivery Stairs</option><option value="1">1</option><option value="2">2</option></select>
 
@@ -79,6 +75,7 @@ color:white;
 
 </div>
 
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDex0iuSIdBsP21VWQJxws0dlpUj9heWac&libraries=places"></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
@@ -106,24 +103,56 @@ luton:[40,50,70,100]
 
 let rate=rates[van.value][men];
 
-let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsDelivery.value);
+let stairsTotal=parseInt(stairsCollection.value)+parseInt(stairsVia.value)+parseInt(stairsDelivery.value);
 let costStairs=stairsTotal*10*men;
 
-let miles=10;
+const segments=via.value?
+[{origin:collection.value,destination:via.value},{origin:via.value,destination:delivery.value}]
+:[{origin:collection.value,destination:delivery.value}];
+
+let totalMeters=0,totalSeconds=0,done=0;
+
+segments.forEach(seg=>{
+new google.maps.DistanceMatrixService().getDistanceMatrix({
+origins:[seg.origin],
+destinations:[seg.destination],
+travelMode:"DRIVING"
+},function(res){
+let el=res.rows[0].elements[0];
+totalMeters+=el.distance.value;
+totalSeconds+=el.duration.value;
+done++;
+if(done===segments.length) finish(totalMeters,totalSeconds);
+});
+});
+
+function finish(meters,seconds){
+
+let miles=meters/1609.34;
 let costMiles=miles*1.5;
 
-let hours=2;
+let load=[40,30,20,15][men]*60;
+let totalTime=seconds+load+(stairsTotal*600);
+
+let hours=Math.ceil((totalTime/3600)*2)/2;
+if(hours<2)hours=2;
+
 let costHours=hours*rate;
 
-let congestion=0;
+let congestion=/(EC|WC|W1|SW1|SE1)/.test((collection.value+via.value+delivery.value).toUpperCase())?18:0;
 
 let total=costHours+costMiles+costStairs+congestion;
 
 let menText = men===0?"Driver only":(men===1?"1 man":men+" men");
 
+let ref="FAM-"+Math.floor(10000+Math.random()*90000);
+
 let quote=`FAST ANY MOVES LTD
 
-Quote Reference: FAM-${Math.floor(10000+Math.random()*90000)}
+Quote Reference: ${ref}
+
+Estimated working time: ${hours} hours
+Total distance: ${miles.toFixed(2)} miles
 
 --------------------------------
 
@@ -138,13 +167,21 @@ ${hours} hours × £${rate}/hour
 = £${costHours.toFixed(2)}
 
 Distance
-${miles} miles × £1.50
+${miles.toFixed(2)} miles × £1.50/mile
 = £${costMiles.toFixed(2)}
 
 Stairs
 ${menText} × ${stairsTotal} flights × £10
 = £${costStairs.toFixed(2)}
-`;
+
+Congestion charge
+= £${congestion.toFixed(2)}
+
+--------------------------------
+
+This quotation is based on the details provided by the customer.
+
+Any additional time will be charged in 30-minute increments.`;
 
 result.innerText=quote;
 bookingButtons.style.display="block";
@@ -166,6 +203,8 @@ quoteCalculated=true;
 
 }
 
+}
+
 /* EMAIL */
 emailBtn.onclick=function(){
 if(!quoteCalculated)return alert("Calculate quote first");
@@ -173,9 +212,7 @@ if(!quoteCalculated)return alert("Calculate quote first");
 emailjs.send("service_1e9jyk9","template_0tbv6y9",{
 quote_breakdown: fullMessage,
 email: email.value
-})
-.then(()=>alert("Email sent successfully"))
-.catch(()=>alert("Email failed"));
+});
 }
 
 /* WHATSAPP */
